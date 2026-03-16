@@ -1,24 +1,30 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
 import '../screens/login_screen.dart';
 import '../screens/main_screen.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // 사용자가 로그인하지 않았으면 로그인 화면을 보여줍니다.
-        if (!snapshot.hasData) {
-          return const LoginScreen();
-        }
+  Widget build(BuildContext context, WidgetRef ref) {
+    // authStateProvider를 구독합니다.
+    final authState = ref.watch(authStateProvider);
 
-        // 사용자가 로그인했으면 메인 화면으로 이동합니다.
-        return const MainScreen();
+    return authState.when(
+      data: (user) {
+        if (user != null) {
+          return const MainScreen();
+        }
+        return const LoginScreen();
       },
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, stack) => Scaffold(
+        body: Center(child: Text('오류가 발생했습니다: $e')),
+      ),
     );
   }
 }
