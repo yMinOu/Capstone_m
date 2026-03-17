@@ -1,3 +1,4 @@
+/// 앱 전체에서 사용하는 공통 색상 상수를 정의하는 파일.
 import 'package:flutter/material.dart';
 
 class AppColors {
