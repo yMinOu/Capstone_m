@@ -1,25 +1,25 @@
+/// 하단 네비게이션을 통해 주요 화면 전환을 관리하는 screen.
 import 'package:flutter/material.dart';
-import './my_page_screen.dart';
+import 'package:nihongo/features/my_page/presentation/screens/my_page_screen.dart';
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+class MainNavigationScreen extends StatefulWidget {
+  const MainNavigationScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
-  // 홈과 마이페이지 두 가지만 유지
   static const List<Widget> _widgetOptions = <Widget>[
     Center(child: Text('홈 화면 (준비 중)', style: TextStyle(fontSize: 18))),
     MyPageScreen(),
   ];
 
   static const List<String> _appBarTitles = <String>[
-    '홈', 
-    '마이페이지', 
+    '홈',
+    '마이페이지',
   ];
 
   void _onItemTapped(int index) {
@@ -41,8 +41,16 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: '홈'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: '마이페이지'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: '홈',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: '마이페이지',
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
