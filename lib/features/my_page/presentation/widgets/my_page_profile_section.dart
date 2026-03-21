@@ -15,28 +15,20 @@ class MyPageProfileSection extends StatelessWidget {
     return Column(
       children: [
         CircleAvatar(
-          radius: 50,
+          radius: 42,
           backgroundImage:
           user.photoURL != null ? NetworkImage(user.photoURL!) : null,
           child: user.photoURL == null
-              ? const Icon(Icons.person, size: 50)
+              ? const Icon(Icons.person_rounded, size: 40)
               : null,
         ),
         const SizedBox(height: 16),
         Text(
-          user.displayName ?? '이름 없음',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall
-              ?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          user.email ?? '이메일 정보 없음',
-          style: Theme.of(context)
-              .textTheme
-              .bodyLarge
-              ?.copyWith(color: Colors.grey),
+          user.displayName!,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );

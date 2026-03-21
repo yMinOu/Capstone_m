@@ -1,3 +1,5 @@
+/// 인증 관련 상태관리(Riverpod) 정의.
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/auth/data/repositories/auth_repository.dart';
@@ -12,6 +14,7 @@ final authUserProvider = StreamProvider<User?>((ref) {
   return repository.authStateChanges();
 });
 
+/// 로그인 진행 상태 및 에러 메시지를 담는 상태 클래스
 class AuthActionState {
   const AuthActionState({
     this.isLoading = false,
@@ -33,6 +36,7 @@ class AuthActionState {
   }
 }
 
+/// 로그인 요청 및 상태 변경을 처리하는 StateNotifier
 class AuthActionNotifier extends StateNotifier<AuthActionState> {
   AuthActionNotifier(this._repository) : super(const AuthActionState());
 

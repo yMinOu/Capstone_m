@@ -1,29 +1,43 @@
 /// 마이페이지에서 사용하는 공통 메뉴 타일 위젯.
 import 'package:flutter/material.dart';
-
+import 'package:nihongo/core/constants/app_colors.dart';
 class MyPageMenuTile extends StatelessWidget {
   const MyPageMenuTile({
     super.key,
-    required this.icon,
     required this.title,
     required this.onTap,
-    this.color,
+    this.trailing,
   });
 
-  final IconData icon;
   final String title;
-  final VoidCallback onTap;
-  final Color? color;
+  final VoidCallback? onTap;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(
-        title,
-        style: TextStyle(color: color),
-      ),
+
+    return InkWell(
       onTap: onTap,
+      child: Ink(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: AppColors.textBlack,
+                ),
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+      ),
     );
   }
 }

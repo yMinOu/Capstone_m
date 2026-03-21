@@ -29,18 +29,18 @@ Future<bool?> showMyPageConfirmationDialog(
   );
 }
 
-void showMyPageAppInfoDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('앱 정보'),
-      content: const Text('Nihongo v1.0.0\n\n개발자: rlaej'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('확인'),
-        ),
-      ],
-    ),
-  );
-}
+// void showMyPageAppInfoDialog(BuildContext context) {
+//   showDialog(
+//     context: context,
+//     builder: (context) => AlertDialog(
+//       title: const Text('앱 정보'),
+//       content: const Text('Nihongo v1.0.0\n\n개발자: rlaej'),
+//       actions: [
+//         TextButton(
+//           onPressed: () => Navigator.of(context).pop(),
+//           child: const Text('확인'),
+//         ),
+//       ],
+//     ),
+//   );
+// }

@@ -1,3 +1,5 @@
+/// Google 로그인 버튼을 제공하는 인증 화면.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/core/constants/app_colors.dart';
@@ -40,7 +42,7 @@ class AuthScreen extends ConsumerWidget {
             const Spacer(flex: 2),
             authActionState.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton.icon(
+                : OutlinedButton.icon(
               onPressed: () async {
                 await ref
                     .read(authActionProvider.notifier)
@@ -52,15 +54,6 @@ class AuthScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  side: const BorderSide(color: AppColors.border),
                 ),
               ),
             ),
