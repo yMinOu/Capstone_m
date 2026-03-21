@@ -5,6 +5,7 @@ import 'package:nihongo/features/my_page/presentation/providers/my_page_provider
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_dialogs.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_menu_tile.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_profile_section.dart';
+import 'package:nihongo/core/constants/app_colors.dart';
 
 class MyPageScreen extends ConsumerWidget {
   const MyPageScreen({super.key});
@@ -33,13 +34,35 @@ class MyPageScreen extends ConsumerWidget {
           return Stack(
             children: [
               ListView(
-                padding: const EdgeInsets.symmetric(vertical: 24),
                 children: [
+                  const SizedBox(height: 28),
                   MyPageProfileSection(user: user),
-                  const SizedBox(height: 32),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  const SizedBox(height: 28),
+
+                  const _SectionTitle('계정'),
+                  const SizedBox(height: 5),
+
                   MyPageMenuTile(
-                    icon: Icons.logout,
+                    title: '이메일',
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/google_logo.png',
+                          width: 18,
+                          height: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          user.email!,
+                          style: const TextStyle(color: AppColors.textGrey),
+                        ),
+                      ],
+                    ),
+                    onTap: null,
+                  ),
+                  Divider(height: 0, thickness: 0.5,),
+                  MyPageMenuTile(
                     title: '로그아웃',
                     onTap: () async {
                       final confirmed = await showMyPageConfirmationDialog(
@@ -48,38 +71,75 @@ class MyPageScreen extends ConsumerWidget {
                         content: '정말 로그아웃 하시겠습니까?',
                         confirmText: '로그아웃',
                       );
-
                       if (confirmed == true) {
                         await ref.read(myPageActionProvider.notifier).logout();
                       }
                     },
                   ),
+                  Divider(height: 0, thickness: 0.5,),
+
                   MyPageMenuTile(
-                    icon: Icons.info_outline,
-                    title: '앱 정보',
-                    onTap: () => showMyPageAppInfoDialog(context),
-                  ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  MyPageMenuTile(
-                    icon: Icons.delete_forever,
                     title: '계정 탈퇴',
-                    color: Colors.red,
                     onTap: () async {
                       final confirmed = await showMyPageConfirmationDialog(
                         context,
                         title: '계정 탈퇴',
-                        content:
-                        '정말 계정을 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없으며, 모든 개인 정보가 삭제됩니다.',
+                        content: '정말 탈퇴하시겠습니까?',
                         confirmText: '탈퇴',
                       );
-
                       if (confirmed == true) {
-                        await ref.read(myPageActionProvider.notifier).deleteAccount(user);
+                        await ref
+                            .read(myPageActionProvider.notifier)
+                            .deleteAccount(user);
                       }
                     },
                   ),
+                  Divider(height: 0, thickness: 0.5,),
+
+                  const SizedBox(height: 12),
+
+                  const _SectionTitle('고객지원'),
+                  const SizedBox(height: 5),
+                  
+                  MyPageMenuTile(
+                    title: '공지사항',
+                    onTap: (){},
+                  ),
+                  Divider(height: 0, thickness: 0.5,),
+                  MyPageMenuTile(
+                    title: '의견 남기기',
+                    onTap: (){},
+                  ),
+                  Divider(height: 0, thickness: 0.5,),
+
+                  const SizedBox(height: 12),
+                  
+                  const _SectionTitle('설정'),
+                  const SizedBox(height: 5),
+
+                  MyPageMenuTile(
+                    title: '현재 버전',
+                    trailing: const Text(
+                      'v1.0.0',
+                      style: TextStyle(color: AppColors.textGrey),
+                    ),
+                    onTap: null,
+                  ),
+                  Divider(height: 0, thickness: 0.5,),
+
+                  MyPageMenuTile(
+                    title: '이용약관',
+                    onTap: (){},
+                  ),
+                  Divider(height: 0, thickness: 0.5,),
+
+                  MyPageMenuTile(
+                    title: '개인정보 처리방침',
+                    onTap: (){},
+                  ),
                 ],
               ),
+
               if (myPageActionState.isLoading)
                 const ColoredBox(
                   color: Color(0x33000000),
@@ -89,8 +149,29 @@ class MyPageScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, stack) => Center(child: Text('오류가 발생했습니다: $e')),
+        error: (e, stack) => Center(child: Text('오류: $e')),
       ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding:const EdgeInsets.symmetric(horizontal: 10),
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.textBlack,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
     );
   }
 }

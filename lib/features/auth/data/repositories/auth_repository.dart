@@ -1,3 +1,6 @@
+/// FirebaseAuth + GoogleSignIn을 이용한 인증 로직 처리.
+/// 로그인, 로그아웃, 사용자 Firestore 동기화를 담당한다.
+///
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';

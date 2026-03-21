@@ -1,3 +1,6 @@
+/// 로그인 상태에 따라 화면을 분기하는 게이트.
+/// 로그인 상태면 메인 화면, 아니면 로그인 화면으로 이동한다.
+///
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/auth/presentation/providers/auth_provider.dart';
