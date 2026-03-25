@@ -46,18 +46,6 @@ class _LearningScreenState extends ConsumerState<LearningScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 화면 제목
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
-              child: Text(
-                '학습',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-
             // 탭바 (단어 / 한자 / 예문)
             TabBar(
               controller: _tabController,
