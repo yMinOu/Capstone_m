@@ -1,8 +1,10 @@
 /// 하단 네비게이션을 통해 주요 화면 전환을 관리하는 screen.
 import 'package:flutter/material.dart';
+import 'package:nihongo/core/constants/app_colors.dart';
 import 'package:nihongo/features/learning/presentation/screens/learning_screen.dart';
 import 'package:nihongo/features/vocabulary/presentation/screens/vocabulary_screen.dart';
 import 'package:nihongo/features/community/presentation/screens/community_screen.dart';
+import 'package:nihongo/features/community/presentation/screens/community_write_screen.dart';
 import 'package:nihongo/features/stats/presentation/screens/stats_screen.dart';
 import 'package:nihongo/features/my_page/presentation/screens/my_page_screen.dart';
 
@@ -48,6 +50,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         index: _selectedIndex,
         children: _page,
       ),
+      floatingActionButton: _selectedIndex == 2
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CommunityWriteScreen(),
+                  ),
+                );
+              },
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.edit),
+            )
+          : null,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           boxShadow: [

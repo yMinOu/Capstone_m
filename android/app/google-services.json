@@ -22,11 +22,35 @@
           }
         },
         {
+          "client_id": "113939685128-f7gbtssi5jtrlcd1mup12bcadilcorra.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nihongo",
+            "certificate_hash": "0059890ba23d1deb65b6de522c40b8bc5c91df09"
+          }
+        },
+        {
+          "client_id": "113939685128-ffl30nvvlkb0ueb7q1986d2a7adr3qpe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nihongo",
+            "certificate_hash": "9b3c4c33112ef5f02a4ba7ee92e441d0865ae859"
+          }
+        },
+        {
           "client_id": "113939685128-idt75jqgp3pnjp24c7mm3uf3eebbqe5a.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.nihongo",
             "certificate_hash": "09829d8630552dd09e326f4587bf1b70b9c83a81"
+          }
+        },
+        {
+          "client_id": "113939685128-l9n70k2cgm7g2imnsth3ie48al5bh8kn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nihongo",
+            "certificate_hash": "297d6d7d112ff54aa53097149abb5a88b0b66f8c"
           }
         },
         {
