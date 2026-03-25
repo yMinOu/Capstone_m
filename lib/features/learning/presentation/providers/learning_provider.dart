@@ -3,6 +3,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
 import 'package:nihongo/features/learning/data/repositories/word_repository.dart';
+import 'package:nihongo/features/learning/data/repositories/user_repository.dart';
+import 'package:nihongo/features/learning/data/repositories/study_stats_repository.dart';
+import 'package:nihongo/features/learning/data/repositories/learning_progress_repository.dart';
 
 
 // 단어 카테고리
@@ -19,6 +22,24 @@ class WordCategory {
 
 final wordRepositoryProvider = Provider<WordRepository>((ref) {
   return WordRepository();
+});
+
+// UserRepository 인스턴스
+
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  return UserRepository();
+});
+
+// StudyStatsRepository 인스턴스
+
+final studyStatsRepositoryProvider = Provider<StudyStatsRepository>((ref) {
+  return StudyStatsRepository();
+});
+
+// LearningProgressRepository 인스턴스
+
+final learningProgressRepositoryProvider = Provider<LearningProgressRepository>((ref) {
+  return LearningProgressRepository();
 });
 
 

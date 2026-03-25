@@ -2,10 +2,14 @@
 // 단어 학습 화면 - Firestore에서 레벨별 단어를 불러와 플래시카드로 표시
 // ============================================================
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nihongo/features/learning/data/repositories/learning_progress_repository.dart';
+import 'package:nihongo/features/learning/data/repositories/study_stats_repository.dart';
+import 'package:nihongo/features/learning/data/repositories/user_repository.dart';
 import 'package:nihongo/features/learning/presentation/providers/learning_provider.dart';
-import 'package:nihongo/features/learning/presentation/widgets/word_card.dart';
+import 'package:nihongo/widgets/word_card.dart';
 
 class WordStudyScreen extends ConsumerStatefulWidget {
   final String categoryId;
@@ -23,6 +27,76 @@ class WordStudyScreen extends ConsumerStatefulWidget {
 
 class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
   int _currentIndex = 0;
+  int _knownCount = 0;
+  int _unknownCount = 0;
+  int _learnedCount = 0;
+  final Set<String> _processedWordIds = {};
+  DateTime? _studyStartTime;
+  String? _uid;
+  UserRepository? _userRepository;
+  StudyStatsRepository? _studyStatsRepository;
+  LearningProgressRepository? _learningProgressRepository;
+
+  @override
+  void initState() {
+    super.initState();
+    _studyStartTime = DateTime.now();
+    _uid = FirebaseAuth.instance.currentUser?.uid;
+    _userRepository = ref.read(userRepositoryProvider);
+    _studyStatsRepository = ref.read(studyStatsRepositoryProvider);
+    _learningProgressRepository = ref.read(learningProgressRepositoryProvider);
+    _loadInitialProgress();
+    print('[학습타이머] 시작 - uid: $_uid');
+  }
+
+  // TODO [임시]: 개발 테스트용 초기화 - 배포 전 제거할 것
+  Future<void> _resetProgress() async {
+    if (_uid == null) return;
+    await _learningProgressRepository!.resetProgress(
+      uid: _uid!,
+      subCategory: widget.categoryId,
+    );
+    setState(() {
+      _knownCount = 0;
+      _unknownCount = 0;
+      _currentIndex = 0;
+      _processedWordIds.clear();
+    });
+  }
+
+  // 화면 진입 시 기존 학습 기록 불러오기
+  Future<void> _loadInitialProgress() async {
+    if (_uid == null) return;
+    final results = await Future.wait([
+      _learningProgressRepository!.getProgressCount(
+        uid: _uid!,
+        subCategory: widget.categoryId,
+      ),
+      _studyStatsRepository!.getDailyLearnedCount(_uid!),
+    ]);
+    final progress = results[0] as ({int knownCount, int unknownCount, Set<String> processedIds});
+    final learnedCount = results[1] as int;
+    setState(() {
+      _knownCount = progress.knownCount;
+      _unknownCount = progress.unknownCount;
+      _learnedCount = learnedCount;
+      _processedWordIds.addAll(progress.processedIds);
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_uid != null && _studyStartTime != null) {
+      final seconds = DateTime.now().difference(_studyStartTime!).inSeconds;
+      print('[학습타이머] 종료 - 경과: ${seconds}초, uid: $_uid');
+      if (seconds > 0) {
+        _userRepository!.addStudySeconds(_uid!, seconds)
+            .then((_) => print('[학습타이머] Firestore 저장 완료'))
+            .catchError((e) => print('[학습타이머] Firestore 에러: $e'));
+      }
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +108,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
         child: asyncWords.when(
           loading: () => Column(
             children: [
-              _TopBar(title: widget.categoryTitle),
+              _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
               const Expanded(
                 child: Center(child: CircularProgressIndicator()),
               ),
@@ -42,7 +116,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
           ),
           error: (e, _) => Column(
             children: [
-              _TopBar(title: widget.categoryTitle),
+              _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
               Expanded(
                 child: Center(
                   child: Text(
@@ -58,7 +132,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
             if (words.isEmpty) {
               return Column(
                 children: [
-                  _TopBar(title: widget.categoryTitle),
+                  _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
                   const Expanded(
                     child: Center(
                       child: Text(
@@ -77,14 +151,17 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _TopBar(title: widget.categoryTitle),
+                _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
 
                 const SizedBox(height: 16),
 
-                // 통계 뱃지 (전체 / 아는 단어 / 모르는 단어)
-                // TODO [통계 연결 시]: 실제 카운트로 교체
                 Center(
-                  child: _StatsBadgeRow(total: words.length),
+                  child: _StatsBadgeRow(
+                    learnedCount: _learnedCount,
+                    knownCount: _knownCount,
+                    unknownCount: _unknownCount,
+                    unseenCount: (words.length - _knownCount - _unknownCount).clamp(0, words.length),
+                  ),
                 ),
 
                 const SizedBox(height: 40),
@@ -108,8 +185,23 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
                         child: _ActionButton(
                           label: '몰라요',
                           color: const Color(0xFFE64A19),
-                          // TODO [통계 연결 시]: unknownCount +1 업데이트 후 다음 단어로
                           onTap: () {
+                            if (!_processedWordIds.contains(word.id)) {
+                              _processedWordIds.add(word.id);
+                              if (_uid != null) {
+                                _userRepository!.incrementStudyCount(_uid!);
+                                _studyStatsRepository!.incrementDailyLearnedCount(_uid!);
+                                _learningProgressRepository!.updateStatus(
+                                  uid: _uid!,
+                                  word: word,
+                                  status: 'dontKnow',
+                                );
+                              }
+                              setState(() {
+                                _unknownCount++;
+                                _learnedCount++;
+                              });
+                            }
                             if (safeIndex < words.length - 1) {
                               setState(() => _currentIndex = safeIndex + 1);
                             }
@@ -121,8 +213,23 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
                         child: _ActionButton(
                           label: '알아요',
                           color: const Color(0xFF1976D2),
-                          // TODO [통계 연결 시]: knownCount +1 업데이트 후 다음 단어로
                           onTap: () {
+                            if (!_processedWordIds.contains(word.id)) {
+                              _processedWordIds.add(word.id);
+                              if (_uid != null) {
+                                _userRepository!.incrementStudyCount(_uid!);
+                                _studyStatsRepository!.incrementDailyLearnedCount(_uid!);
+                                _learningProgressRepository!.updateStatus(
+                                  uid: _uid!,
+                                  word: word,
+                                  status: 'know',
+                                );
+                              }
+                              setState(() {
+                                _knownCount++;
+                                _learnedCount++;
+                              });
+                            }
                             if (safeIndex < words.length - 1) {
                               setState(() => _currentIndex = safeIndex + 1);
                             }
@@ -170,8 +277,10 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
 // ============================================================
 class _TopBar extends StatelessWidget {
   final String title;
+  // TODO [임시]: 개발 테스트용 초기화 콜백 - 배포 전 제거할 것
+  final VoidCallback onReset;
 
-  const _TopBar({required this.title});
+  const _TopBar({required this.title, required this.onReset});
 
   @override
   Widget build(BuildContext context) {
@@ -181,12 +290,19 @@ class _TopBar extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+        ),
+        // TODO [임시]: 개발 테스트용 초기화 버튼 - 배포 전 제거할 것
+        IconButton(
+          icon: const Icon(Icons.refresh, color: Colors.grey),
+          onPressed: onReset,
         ),
       ],
     );
@@ -194,12 +310,20 @@ class _TopBar extends StatelessWidget {
 }
 
 // ============================================================
-// 통계 뱃지 (전체 / 아는 단어 / 모르는 단어)
+// 통계 뱃지 (학습 수 / 아는 단어 / 모르는 단어 / 안 본 단어)
 // ============================================================
 class _StatsBadgeRow extends StatelessWidget {
-  final int total;
+  final int learnedCount;  // 알아요 + 몰라요 합계
+  final int knownCount;    // 알아요
+  final int unknownCount;  // 몰라요
+  final int unseenCount;   // 아직 안 본 단어
 
-  const _StatsBadgeRow({required this.total});
+  const _StatsBadgeRow({
+    required this.learnedCount,
+    required this.knownCount,
+    required this.unknownCount,
+    required this.unseenCount,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,25 +336,29 @@ class _StatsBadgeRow extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 전체 단어 수
           _StatBadge(
             icon: Icons.add_circle,
             color: const Color(0xFFFFC107),
-            count: total,
+            count: learnedCount,
           ),
           const SizedBox(width: 16),
-          // TODO [통계 연결 시]: knownCount 값으로 교체
-          const _StatBadge(
+          _StatBadge(
             icon: Icons.check_circle,
-            color: Color(0xFF4CAF50),
-            count: 0,
+            color: const Color(0xFF1976D2),
+            count: knownCount,
           ),
           const SizedBox(width: 16),
-          // TODO [통계 연결 시]: unknownCount 값으로 교체
-          const _StatBadge(
+          _StatBadge(
             icon: Icons.remove_circle,
-            color: Color(0xFFF44336),
-            count: 0,
+            color: const Color(0xFFE64A19),
+            count: unknownCount,
+          ),
+          const SizedBox(width: 16),
+          _StatBadge(
+            icon: Icons.visibility_off,
+            color: Colors.grey,
+            count: unseenCount,
+            useCircleBackground: true,
           ),
         ],
       ),
@@ -242,18 +370,30 @@ class _StatBadge extends StatelessWidget {
   final IconData icon;
   final Color color;
   final int count;
+  final bool useCircleBackground;
 
   const _StatBadge({
     required this.icon,
     required this.color,
     required this.count,
+    this.useCircleBackground = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: color, size: 20),
+        useCircleBackground
+            ? Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.white, size: 14),
+              )
+            : Icon(icon, color: color, size: 20),
         const SizedBox(width: 4),
         Text(
           '$count',

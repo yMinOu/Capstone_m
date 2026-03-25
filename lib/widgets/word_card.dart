@@ -1,4 +1,5 @@
 // 공통 단어 플래시카드 위젯
+// 학습 화면, 단어장 등 여러 곳에서 재사용 가능
 
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
