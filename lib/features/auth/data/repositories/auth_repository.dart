@@ -64,6 +64,8 @@ class AuthRepository {
         'displayName': user.displayName,
         'email': user.email,
         'photoURL': user.photoURL,
+        'totalStudySeconds': 0,
+        'totalStudyCount': 0,
       });
       return;
     }
@@ -72,6 +74,8 @@ class AuthRepository {
       'displayName': user.displayName,
       'email': user.email,
       'photoURL': user.photoURL,
+      'totalStudySeconds': snapshot.data()?['totalStudySeconds'] ?? 0,
+      'totalStudyCount': snapshot.data()?['totalStudyCount'] ?? 0,
     });
   }
 
