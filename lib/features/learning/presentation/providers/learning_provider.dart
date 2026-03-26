@@ -55,9 +55,26 @@ final wordCategoryProvider = Provider<List<WordCategory>>((ref) {
 });
 
 // 레벨별 단어 목록 (Firestore 조회)
-// 사용: ref.watch(wordListProvider('N5'))
 final wordListProvider =
     FutureProvider.family<List<WordModel>, String>((ref, level) async {
   final repository = ref.read(wordRepositoryProvider);
   return repository.fetchWordsByLevel(level);
+});
+
+// 예문 카테고리 목록
+final sentenceCategoryProvider = Provider<List<WordCategory>>((ref) {
+  return const [
+    WordCategory(id: 'N5', title: 'JLPT N5 필수 예문'),
+    WordCategory(id: 'N4', title: 'JLPT N4 필수 예문'),
+    WordCategory(id: 'N3', title: 'JLPT N3 필수 예문'),
+    WordCategory(id: 'N2', title: 'JLPT N2 필수 예문'),
+    WordCategory(id: 'N1', title: 'JLPT N1 필수 예문'),
+  ];
+});
+
+// 레벨별 예문 목록 (Firestore 조회)
+final sentenceListProvider =
+    FutureProvider.family<List<WordModel>, String>((ref, level) async {
+  final repository = ref.read(wordRepositoryProvider);
+  return repository.fetchSentencesByLevel(level);
 });

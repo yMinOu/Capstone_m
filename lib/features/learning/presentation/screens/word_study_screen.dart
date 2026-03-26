@@ -8,13 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/learning/data/repositories/learning_progress_repository.dart';
 import 'package:nihongo/features/learning/data/repositories/study_stats_repository.dart';
 import 'package:nihongo/features/learning/data/repositories/user_repository.dart';
+import 'package:nihongo/features/learning/data/models/word_model.dart';
 import 'package:nihongo/features/learning/presentation/providers/learning_provider.dart';
+
 import 'package:nihongo/widgets/word_card.dart';
 
 class WordStudyScreen extends ConsumerStatefulWidget {
   final String categoryId;
   final String categoryTitle;
-
   const WordStudyScreen({
     super.key,
     required this.categoryId,
@@ -27,10 +28,12 @@ class WordStudyScreen extends ConsumerStatefulWidget {
 
 class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
   int _currentIndex = 0;
+  bool _isCardFlipped = false;
   int _knownCount = 0;
   int _unknownCount = 0;
   int _learnedCount = 0;
-  final Set<String> _processedWordIds = {};
+  // wordId → 'know' | 'dontKnow' : 이전 답변 추적용
+  final Map<String, String> _wordAnswers = {};
   DateTime? _studyStartTime;
   String? _uid;
   UserRepository? _userRepository;
@@ -46,6 +49,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
     _studyStatsRepository = ref.read(studyStatsRepositoryProvider);
     _learningProgressRepository = ref.read(learningProgressRepositoryProvider);
     _loadInitialProgress();
+    if (_uid != null) _userRepository!.updateStreakIfNeeded(_uid!);
     print('[학습타이머] 시작 - uid: $_uid');
   }
 
@@ -60,8 +64,41 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
       _knownCount = 0;
       _unknownCount = 0;
       _currentIndex = 0;
-      _processedWordIds.clear();
+      _wordAnswers.clear();
     });
+  }
+
+  // 알아요/몰라요 답변 처리 - 이전 답변이 있으면 카운트 교체
+  void _applyAnswer({required WordModel word, required String newStatus}) {
+    final prev = _wordAnswers[word.id];
+    if (prev == newStatus) return; // 같은 답변이면 무시
+
+    setState(() {
+      // 이전 답변 카운트 취소
+      if (prev == 'know') _knownCount--;
+      if (prev == 'dontKnow') _unknownCount--;
+
+      // 새 답변 카운트 적용
+      if (newStatus == 'know') _knownCount++;
+      if (newStatus == 'dontKnow') _unknownCount++;
+
+      // 처음 답변이면 학습 수 증가
+      if (prev == null) _learnedCount++;
+
+      _wordAnswers[word.id] = newStatus;
+    });
+
+    if (_uid != null) {
+      if (prev == null) {
+        _userRepository!.incrementStudyCount(_uid!);
+        _studyStatsRepository!.incrementDailyLearnedCount(_uid!);
+      }
+      _learningProgressRepository!.updateStatus(
+        uid: _uid!,
+        word: word,
+        status: newStatus,
+      );
+    }
   }
 
   // 화면 진입 시 기존 학습 기록 불러오기
@@ -74,13 +111,13 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
       ),
       _studyStatsRepository!.getDailyLearnedCount(_uid!),
     ]);
-    final progress = results[0] as ({int knownCount, int unknownCount, Set<String> processedIds});
+    final progress = results[0] as ({int knownCount, int unknownCount, Map<String, String> wordAnswers});
     final learnedCount = results[1] as int;
     setState(() {
       _knownCount = progress.knownCount;
       _unknownCount = progress.unknownCount;
       _learnedCount = learnedCount;
-      _processedWordIds.addAll(progress.processedIds);
+      _wordAnswers.addAll(progress.wordAnswers);
     });
   }
 
@@ -93,6 +130,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
         _userRepository!.addStudySeconds(_uid!, seconds)
             .then((_) => print('[학습타이머] Firestore 저장 완료'))
             .catchError((e) => print('[학습타이머] Firestore 에러: $e'));
+        _studyStatsRepository!.addDailyStudySeconds(_uid!, seconds);
       }
     }
     super.dispose();
@@ -148,7 +186,8 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
             final safeIndex = _currentIndex.clamp(0, words.length - 1);
             final word = words[safeIndex];
 
-            return Column(
+            return SingleChildScrollView(
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
@@ -166,105 +205,39 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
 
                 const SizedBox(height: 40),
 
-                // 단어 카드
-                Expanded(
-                  child: Align(
-                    alignment: const Alignment(0, -0.7),
-                    child: WordCard(word: word),
-                  ),
+                // 플립 카드 (앞면: 단어만 / 뒷면: 전체 정보 + 버튼)
+                WordCard(
+                  word: word,
+                  initialFlipped: _isCardFlipped,
+                  onUnknown: () {
+                    _applyAnswer(word: word, newStatus: 'dontKnow');
+                    if (safeIndex < words.length - 1) {
+                      setState(() {
+                        _currentIndex = safeIndex + 1;
+                        _isCardFlipped = false;
+                      });
+                    }
+                  },
+                  onKnown: () {
+                    _applyAnswer(word: word, newStatus: 'know');
+                    if (safeIndex < words.length - 1) {
+                      setState(() {
+                        _currentIndex = safeIndex + 1;
+                        _isCardFlipped = false;
+                      });
+                    }
+                  },
+                  onPrevious: safeIndex > 0
+                      ? () => setState(() {
+                          _currentIndex = safeIndex - 1;
+                          _isCardFlipped = true; // 이전은 뒷면에서만 누를 수 있으므로 항상 뒷면으로
+                        })
+                      : null,
                 ),
 
                 const SizedBox(height: 24),
-
-                // 몰라요 / 알아요 버튼
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _ActionButton(
-                          label: '몰라요',
-                          color: const Color(0xFFE64A19),
-                          onTap: () {
-                            if (!_processedWordIds.contains(word.id)) {
-                              _processedWordIds.add(word.id);
-                              if (_uid != null) {
-                                _userRepository!.incrementStudyCount(_uid!);
-                                _studyStatsRepository!.incrementDailyLearnedCount(_uid!);
-                                _learningProgressRepository!.updateStatus(
-                                  uid: _uid!,
-                                  word: word,
-                                  status: 'dontKnow',
-                                );
-                              }
-                              setState(() {
-                                _unknownCount++;
-                                _learnedCount++;
-                              });
-                            }
-                            if (safeIndex < words.length - 1) {
-                              setState(() => _currentIndex = safeIndex + 1);
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _ActionButton(
-                          label: '알아요',
-                          color: const Color(0xFF1976D2),
-                          onTap: () {
-                            if (!_processedWordIds.contains(word.id)) {
-                              _processedWordIds.add(word.id);
-                              if (_uid != null) {
-                                _userRepository!.incrementStudyCount(_uid!);
-                                _studyStatsRepository!.incrementDailyLearnedCount(_uid!);
-                                _learningProgressRepository!.updateStatus(
-                                  uid: _uid!,
-                                  word: word,
-                                  status: 'know',
-                                );
-                              }
-                              setState(() {
-                                _knownCount++;
-                                _learnedCount++;
-                              });
-                            }
-                            if (safeIndex < words.length - 1) {
-                              setState(() => _currentIndex = safeIndex + 1);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // 이전 버튼
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: Row(
-                    children: [
-                      const Expanded(child: SizedBox()),
-                      Expanded(
-                        flex: 2,
-                        child: _ActionButton(
-                          label: '이전',
-                          color: Colors.grey.shade300,
-                          textColor: Colors.grey.shade600,
-                          onTap: () {
-                            if (safeIndex > 0) {
-                              setState(() => _currentIndex = safeIndex - 1);
-                            }
-                          },
-                        ),
-                      ),
-                      const Expanded(child: SizedBox()),
-                    ],
-                  ),
-                ),
               ],
-            );
+            ));
           },
         ),
       ),
@@ -407,41 +380,3 @@ class _StatBadge extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  final Color textColor;
-
-  const _ActionButton({
-    required this.label,
-    required this.color,
-    required this.onTap,
-    this.textColor = Colors.white,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
