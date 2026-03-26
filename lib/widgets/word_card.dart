@@ -161,7 +161,9 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
   // 뒷면: 의미, 예문, 버튼
   Widget _buildBack() {
     final word = widget.word;
-    return _CardContainer(
+    return GestureDetector(
+      onTap: _onTap,
+      child: _CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -327,6 +329,7 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
           ],
         ],
       ),
+    ),
     );
   }
 }
