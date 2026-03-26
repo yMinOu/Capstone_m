@@ -64,26 +64,37 @@ class _CommunityWriteScreenState extends ConsumerState<CommunityWriteScreen> {
       return;
     }
 
-    try {
-      await ref.read(communityRepositoryProvider).createPost(
-            title: title,
-            content: content,
-            category: _selectedCategory,
-          );
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('게시글 등록 중 오류가 발생했습니다: $e')),
+    await ref.read(communityNotifierProvider.notifier).createPost(
+          title: title,
+          content: content,
+          category: _selectedCategory,
         );
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 성공/실패 상태를 리스닝하여 처리
+    ref.listen<AsyncValue<void>>(communityNotifierProvider, (previous, next) {
+      next.whenOrNull(
+        data: (_) {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        },
+        error: (error, stack) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('게시글 등록 중 오류가 발생했습니다: $error')),
+            );
+          }
+        },
+      );
+    });
+
+    final state = ref.watch(communityNotifierProvider);
+    final isLoading = state.isLoading;
+  // ... (the rest of the build method)
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -122,130 +133,152 @@ class _CommunityWriteScreenState extends ConsumerState<CommunityWriteScreen> {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _submitPost,
-            child: const Text(
-              '등록',
-              style: TextStyle(
-                color: AppColors.textBlack,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+            onPressed: isLoading ? null : _submitPost,
+            child: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.textBlack,
+                    ),
+                  )
+                : const Text(
+                    '등록',
+                    style: TextStyle(
+                      color: AppColors.textBlack,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
           ),
         ],
         shape: Border(
           bottom: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                hintText: '제목',
-                hintStyle: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.bold),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                filled: false,
-              ),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textBlack,
-              ),
-            ),
-          ),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.2)),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: TextField(
-                controller: _contentController,
-                maxLines: null,
-                expands: true,
-                textAlignVertical: TextAlignVertical.top,
-                decoration: const InputDecoration(
-                  hintText: '내용을 입력해주세요.',
-                  hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  filled: false,
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                child: TextField(
+                  controller: _titleController,
+                  enabled: !isLoading,
+                  decoration: const InputDecoration(
+                    hintText: '제목',
+                    hintStyle: TextStyle(color: Colors.grey, fontSize: 18, fontWeight: FontWeight.bold),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textBlack,
+                  ),
                 ),
-                style: const TextStyle(fontSize: 15, color: AppColors.textBlack),
               ),
-            ),
-          ),
-          // 이미지 미리보기 영역
-          if (_selectedImages.isNotEmpty)
-            Container(
-              height: 100,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _selectedImages.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0, top: 8.0),
-                    child: Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(_selectedImages[index].path),
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: GestureDetector(
-                            onTap: () => _removeImage(index),
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                size: 14,
-                                color: Colors.white,
+              Divider(height: 1, color: Colors.grey.withOpacity(0.2)),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: TextField(
+                    controller: _contentController,
+                    enabled: !isLoading,
+                    maxLines: null,
+                    expands: true,
+                    textAlignVertical: TextAlignVertical.top,
+                    decoration: const InputDecoration(
+                      hintText: '내용을 입력해주세요.',
+                      hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
+                    ),
+                    style: const TextStyle(fontSize: 15, color: AppColors.textBlack),
+                  ),
+                ),
+              ),
+              // 이미지 미리보기 영역
+              if (_selectedImages.isNotEmpty)
+                Container(
+                  height: 100,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _selectedImages.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0, top: 8.0),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                File(_selectedImages[index].path),
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
                               ),
                             ),
-                          ),
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: GestureDetector(
+                                onTap: isLoading ? null : () => _removeImage(index),
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      );
+                    },
+                  ),
+                ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.camera_alt_outlined, color: AppColors.textBlack),
+                      onPressed: isLoading ? null : _pickImages,
                     ),
-                  );
-                },
-              ),
-            ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
-              ),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.camera_alt_outlined, color: AppColors.textBlack),
-                  onPressed: _pickImages,
+                    Text(
+                      '${_selectedImages.length}/10',
+                      style: const TextStyle(color: AppColors.textGrey, fontSize: 14),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${_selectedImages.length}/10',
-                  style: const TextStyle(color: AppColors.textGrey, fontSize: 14),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (isLoading)
+            Container(
+              color: Colors.black12,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
         ],
       ),
     );
