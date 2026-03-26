@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "69037549587",
+    "project_id": "capstone-prod-39d16",
+    "storage_bucket": "capstone-prod-39d16.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69037549587:android:899f9acbe84c0e73bdb7e6",
+        "android_client_info": {
+          "package_name": "com.example.nihongo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "69037549587-t5b3rc0kacjk2039dt784v032l5ph64j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nihongo",
+            "certificate_hash": "6ec40e17df0c5e37336711d37ae599b7f3822cdc"
+          }
+        },
+        {
+          "client_id": "69037549587-sjguc0da118i6js3qpgrvbfujlr44ku8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQ6Nr7Pyr7abpeSd8PPP-DMVW1JAYDXMY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "69037549587-sjguc0da118i6js3qpgrvbfujlr44ku8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "69037549587-homk24s0p51r4kv21r3n4ls8da2hohb6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.nihongo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
