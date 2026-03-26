@@ -10,12 +10,14 @@
 
 ## 구조
 
-* feature 단위 분리
+* feature 기능 단위 분리
 * screen에는 UI만 작성
 * widget은 재사용 가능한 UI 단위로 분리
 * screen에서 repository 직접 호출 금지
 * provider를 통해 repository 접근
 * Firebase / DB / API 호출은 repository에서만 처리
+* core 앱 전역에서 공통으로 사용하는 유틸, 테마, 라우팅
+* assets에는 /images, /fonts, /icons 정적 파일 하위 폴더로 분류
 
 ---
 

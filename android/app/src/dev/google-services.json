@@ -30,19 +30,19 @@
           }
         },
         {
-          "client_id": "113939685128-ffl30nvvlkb0ueb7q1986d2a7adr3qpe.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.nihongo",
-            "certificate_hash": "9b3c4c33112ef5f02a4ba7ee92e441d0865ae859"
-          }
-        },
-        {
           "client_id": "113939685128-idt75jqgp3pnjp24c7mm3uf3eebbqe5a.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.nihongo",
             "certificate_hash": "09829d8630552dd09e326f4587bf1b70b9c83a81"
+          }
+        },
+        {
+          "client_id": "113939685128-kdt0k0e5sa2kdup1rph0sj4ia0mvj2r9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nihongo",
+            "certificate_hash": "698a3264072253ba32d22a905fc1c07dad6afea0"
           }
         },
         {

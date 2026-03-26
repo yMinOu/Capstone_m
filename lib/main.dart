@@ -4,13 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/core/theme/app_theme.dart';
 import 'package:nihongo/features/auth/presentation/widgets/auth_gate.dart';
-import 'package:nihongo/firebase_options.dart';
+import 'package:nihongo/firebase_options_dev.dart' as dev;
+import 'package:nihongo/firebase_options_prod.dart' as prod;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  const env = String.fromEnvironment('ENV', defaultValue: 'dev');
+
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+    options: env == 'prod'
+        ? prod.DefaultFirebaseOptions.currentPlatform
+        : dev.DefaultFirebaseOptions.currentPlatform,
   );
 
   runApp(

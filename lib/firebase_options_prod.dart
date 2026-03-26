@@ -19,7 +19,7 @@ class DefaultFirebaseOptions {
     if (kIsWeb) {
       throw UnsupportedError(
         'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
+            'you can reconfigure this by running the FlutterFire CLI again.',
       );
     }
     switch (defaultTargetPlatform) {
@@ -30,17 +30,17 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
+              'you can reconfigure this by running the FlutterFire CLI again.',
         );
       default:
         throw UnsupportedError(
@@ -50,22 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDw2WX4U6sSEmnSFVfOFGK-ku2FihhhtUU',
-    appId: '1:113939685128:android:6024b531e1d1a1774956bd',
-    messagingSenderId: '113939685128',
-    projectId: 'capstone-ee1db',
-    storageBucket: 'capstone-ee1db.firebasestorage.app',
+    apiKey: 'AIzaSyCQ6Nr7Pyr7abpeSd8PPP-DMVW1JAYDXMY',
+    appId: '1:69037549587:android:899f9acbe84c0e73bdb7e6',
+    messagingSenderId: '69037549587',
+    projectId: 'capstone-prod-39d16',
+    storageBucket: 'capstone-prod-39d16.firebasestorage.app',
+    androidClientId: '69037549587-t5b3rc0kacjk2039dt784v032l5ph64j.apps.googleusercontent.com', // ← 추가
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBiScvQ2bPO2v3CeUqxk-jbFzoctz8eGUM',
-    appId: '1:113939685128:ios:d3446fecf8cdcb064956bd',
-    messagingSenderId: '113939685128',
-    projectId: 'capstone-ee1db',
-    storageBucket: 'capstone-ee1db.firebasestorage.app',
-    androidClientId: '113939685128-22ohkuc50695emcdglsgth52n8gh42kf.apps.googleusercontent.com',
-    iosClientId: '113939685128-l9qqd15frlpr6o16qn80h8k8ogng8dg4.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBH0d47FjsYXeNdUl4z4hG6d4PGghVEUX8',
+    appId: '1:69037549587:ios:027b7bdd8a9481f5bdb7e6',
+    messagingSenderId: '69037549587',
+    projectId: 'capstone-prod-39d16',
+    storageBucket: 'capstone-prod-39d16.firebasestorage.app',
     iosBundleId: 'com.example.nihongo',
   );
-
 }
