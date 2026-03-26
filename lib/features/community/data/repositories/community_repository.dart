@@ -74,6 +74,33 @@ class CommunityRepository {
     await _firestore.collection('posts').doc(postId).delete();
   }
 
+  Future<void> reportPost(String postId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    // 실제 서비스에서는 'reports' 컬렉션에 저장하거나 관리자에게 알림을 보낼 수 있습니다.
+    // 현재는 간단히 로그를 남기거나 나중에 확장 가능하도록 구조만 잡습니다.
+    await _firestore.collection('reports').add({
+      'postId': postId,
+      'reporterId': user.uid,
+      'createdAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+  }
+
+  Future<void> reportComment(String postId, String commentId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    await _firestore.collection('reports').add({
+      'postId': postId,
+      'commentId': commentId,
+      'reporterId': user.uid,
+      'createdAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+  }
+
   // 댓글 관련 메서드
   Future<void> addComment(String postId, String content) async {
     final user = _auth.currentUser;

@@ -74,6 +74,100 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         elevation: 0,
         title: const Text('게시글', style: TextStyle(color: AppColors.textBlack)),
         iconTheme: const IconThemeData(color: AppColors.textBlack),
+        actions: [
+          PopupMenuButton<String>(
+            color: Colors.white,
+            onSelected: (value) async {
+              if (value == 'delete') {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: Colors.white,
+                    title: const Text('게시글 삭제'),
+                    content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('취소'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  try {
+                    await ref.read(communityNotifierProvider.notifier).deletePost(post.id);
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('게시글이 삭제되었습니다.')),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('삭제 실패: $e')),
+                      );
+                    }
+                  }
+                }
+              } else if (value == 'report') {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: Colors.white,
+                    title: const Text('게시글 신고'),
+                    content: const Text('이 게시글을 신고하시겠습니까?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('취소'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('신고', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  try {
+                    await ref.read(communityNotifierProvider.notifier).reportPost(post.id);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('신고가 접수되었습니다.')),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('신고 실패: $e')),
+                      );
+                    }
+                  }
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              if (post.authorId == currentUserId)
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('삭제', style: TextStyle(color: Colors.red)),
+                )
+              else
+                const PopupMenuItem(
+                  value: 'report',
+                  child: Text('신고하기'),
+                ),
+            ],
+            icon: const Icon(Icons.more_vert),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -163,14 +257,99 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                                     Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                                     const Spacer(),
                                     Text(_formatDateTime(comment.createdAt), style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
-                                    if (isCommentAuthor)
-                                      GestureDetector(
-                                        onTap: () => ref.read(communityNotifierProvider.notifier).deleteComment(post.id, comment.id),
-                                        child: const Padding(
-                                          padding: EdgeInsets.only(left: 8),
-                                          child: Icon(Icons.delete_outline, size: 16, color: Colors.redAccent),
-                                        ),
-                                      ),
+                                    PopupMenuButton<String>(
+                                      color: Colors.white,
+                                      onSelected: (value) async {
+                                        if (value == 'delete') {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              backgroundColor: Colors.white,
+                                              title: const Text('댓글 삭제'),
+                                              content: const Text('정말로 이 댓글을 삭제하시겠습니까?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context, false),
+                                                  child: const Text('취소'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context, true),
+                                                  child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+
+                                          if (confirm == true) {
+                                            try {
+                                              await ref.read(communityNotifierProvider.notifier).deleteComment(post.id, comment.id);
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('댓글이 삭제되었습니다.')),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('삭제 실패: $e')),
+                                                );
+                                              }
+                                            }
+                                          }
+                                        } else if (value == 'report') {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              backgroundColor: Colors.white,
+                                              title: const Text('댓글 신고'),
+                                              content: const Text('이 댓글을 신고하시겠습니까?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context, false),
+                                                  child: const Text('취소'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context, true),
+                                                  child: const Text('신고', style: TextStyle(color: Colors.red)),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+
+                                          if (confirm == true) {
+                                            try {
+                                              await ref.read(communityNotifierProvider.notifier).reportComment(post.id, comment.id);
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('신고가 접수되었습니다.')),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('신고 실패: $e')),
+                                                );
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        if (isCommentAuthor)
+                                          const PopupMenuItem(
+                                            value: 'delete',
+                                            child: Text('삭제', style: TextStyle(color: Colors.red)),
+                                          )
+                                        else
+                                          const PopupMenuItem(
+                                            value: 'report',
+                                            child: Text('신고하기'),
+                                          ),
+                                      ],
+                                      icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textGrey),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 6),

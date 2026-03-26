@@ -25,6 +25,21 @@ final commentsProvider = StreamProvider.family<List<CommentModel>, String>((ref,
   return repository.getComments(postId);
 });
 
+final communitySearchQueryProvider = StateProvider<String>((ref) => '');
+
+final filteredCommunityPostsProvider = Provider<AsyncValue<List<PostModel>>>((ref) {
+  final postsAsync = ref.watch(communityPostsProvider);
+  final searchQuery = ref.watch(communitySearchQueryProvider).toLowerCase();
+
+  return postsAsync.whenData((posts) {
+    if (searchQuery.isEmpty) return posts;
+    return posts.where((post) {
+      return post.title.toLowerCase().contains(searchQuery) ||
+             post.content.toLowerCase().contains(searchQuery);
+    }).toList();
+  });
+});
+
 class CommunityNotifier extends StateNotifier<AsyncValue<void>> {
   final CommunityRepository _repository;
 
@@ -53,6 +68,22 @@ class CommunityNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _repository.deletePost(postId);
       state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> reportPost(String postId) async {
+    try {
+      await _repository.reportPost(postId);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> reportComment(String postId, String commentId) async {
+    try {
+      await _repository.reportComment(postId, commentId);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

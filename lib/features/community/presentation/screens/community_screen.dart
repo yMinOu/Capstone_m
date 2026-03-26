@@ -22,6 +22,7 @@ class CommunityScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         title: const Text('게시글 삭제'),
         content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
         actions: [
