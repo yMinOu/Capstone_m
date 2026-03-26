@@ -13,7 +13,6 @@ class WordRepository {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   // 특정 레벨(N1~N5)의 단어 목록 가져오기
-  // level 예: 'N5', 'N4', 'N3', 'N2', 'N1'
   Future<List<WordModel>> fetchWordsByLevel(String level) async {
     final snapshot = await _firestore
         .collection('learning_contents')
@@ -22,6 +21,21 @@ class WordRepository {
         .get();
 
     return snapshot.docs
+        .where((doc) => doc.id.contains('_word_'))
+        .map((doc) => WordModel.fromFirestore(doc))
+        .toList();
+  }
+
+  // 특정 레벨(N1~N5)의 예문 목록 가져오기
+  Future<List<WordModel>> fetchSentencesByLevel(String level) async {
+    final snapshot = await _firestore
+        .collection('learning_contents')
+        .where('subCategory', isEqualTo: level)
+        .where('isActive', isEqualTo: true)
+        .get();
+
+    return snapshot.docs
+        .where((doc) => doc.id.contains('_sentence_'))
         .map((doc) => WordModel.fromFirestore(doc))
         .toList();
   }

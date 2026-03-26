@@ -30,6 +30,23 @@ class StudyStatsRepository {
     return (doc.data()?['learnedCount'] as int?) ?? 0;
   }
 
+  // users/{uid}/daily_stats/{yyyy-MM-dd}.studySeconds 에 seconds 만큼 누적
+  Future<void> addDailyStudySeconds(String uid, int seconds) async {
+    if (seconds <= 0) return;
+    final dateKey = _todayKey();
+    final ref = _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('daily_stats')
+        .doc(dateKey);
+
+    await ref.set({
+      'dateKey': dateKey,
+      'studySeconds': FieldValue.increment(seconds),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   // users/{uid}/daily_stats/{yyyy-MM-dd}.learnedCount +1
   Future<void> incrementDailyLearnedCount(String uid) async {
     final dateKey = _todayKey();

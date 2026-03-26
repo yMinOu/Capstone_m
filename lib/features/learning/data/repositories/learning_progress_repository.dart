@@ -50,8 +50,8 @@ class LearningProgressRepository {
     }, SetOptions(merge: true));
   }
 
-  // 특정 레벨의 know / dontKnow 카운트 + 처리된 단어 ID 목록 조회
-  Future<({int knownCount, int unknownCount, Set<String> processedIds})> getProgressCount({
+  // 특정 레벨의 know / dontKnow 카운트 + 단어별 status 맵 조회
+  Future<({int knownCount, int unknownCount, Map<String, String> wordAnswers})> getProgressCount({
     required String uid,
     required String subCategory,
   }) async {
@@ -62,11 +62,11 @@ class LearningProgressRepository {
 
     int knownCount = 0;
     int unknownCount = 0;
-    final processedIds = <String>{};
+    final wordAnswers = <String, String>{};
 
     for (final doc in snapshot.docs) {
-      final status = (doc.data() as Map<String, dynamic>)['status'];
-      processedIds.add(doc.id);
+      final status = (doc.data() as Map<String, dynamic>)['status'] as String;
+      wordAnswers[doc.id] = status;
       if (status == 'know') {
         knownCount++;
       } else if (status == 'dontKnow') {
@@ -74,6 +74,6 @@ class LearningProgressRepository {
       }
     }
 
-    return (knownCount: knownCount, unknownCount: unknownCount, processedIds: processedIds);
+    return (knownCount: knownCount, unknownCount: unknownCount, wordAnswers: wordAnswers);
   }
 }

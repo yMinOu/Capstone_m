@@ -1,19 +1,39 @@
 // 공통 단어 플래시카드 위젯
 // 학습 화면, 단어장 등 여러 곳에서 재사용 가능
+// - 앞면: 일본어 단어만 표시 (탭하면 뒤집기)
+// - 뒷면: 의미, 예문, 버튼 (버튼은 옵션)
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
 
 class WordCard extends StatefulWidget {
   final WordModel word;
+  final VoidCallback? onUnknown;  // 몰라요 (없으면 버튼 숨김)
+  final VoidCallback? onKnown;    // 알아요  (없으면 버튼 숨김)
+  final VoidCallback? onPrevious; // 이전    (없으면 버튼 숨김)
+  final bool initialFlipped;      // 처음부터 뒷면으로 시작할지
 
-  const WordCard({super.key, required this.word});
+  const WordCard({
+    super.key,
+    required this.word,
+    this.onUnknown,
+    this.onKnown,
+    this.onPrevious,
+    this.initialFlipped = false,
+  });
 
   @override
   State<WordCard> createState() => _WordCardState();
 }
 
-class _WordCardState extends State<WordCard> {
+class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin {
+  // 플립 애니메이션
+  late final AnimationController _flipController;
+  late final Animation<double> _flipAnimation;
+  bool _isFlipped = false;
+
+  // 뒷면 스크롤
   final ScrollController _scrollController = ScrollController();
   final ScrollController _exampleScrollController = ScrollController();
   bool _showFade = true;
@@ -22,19 +42,22 @@ class _WordCardState extends State<WordCard> {
   @override
   void initState() {
     super.initState();
+    _flipController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
+    );
     _scrollController.addListener(() {
       final atBottom = _scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent;
-      if (atBottom != !_showFade) {
-        setState(() => _showFade = !atBottom);
-      }
+      if (atBottom != !_showFade) setState(() => _showFade = !atBottom);
     });
     _exampleScrollController.addListener(() {
       final atBottom = _exampleScrollController.position.pixels >=
           _exampleScrollController.position.maxScrollExtent;
-      if (atBottom != !_showExampleFade) {
-        setState(() => _showExampleFade = !atBottom);
-      }
+      if (atBottom != !_showExampleFade) setState(() => _showExampleFade = !atBottom);
     });
   }
 
@@ -42,6 +65,14 @@ class _WordCardState extends State<WordCard> {
   void didUpdateWidget(WordCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.word.id != widget.word.id) {
+      // 단어 바뀌면 initialFlipped에 따라 앞/뒷면으로 이동 (애니메이션 없이 즉시)
+      if (widget.initialFlipped) {
+        _flipController.value = 1.0;
+        _isFlipped = true;
+      } else {
+        _flipController.reset();
+        _isFlipped = false;
+      }
       if (_scrollController.hasClients) _scrollController.jumpTo(0);
       if (_exampleScrollController.hasClients) _exampleScrollController.jumpTo(0);
       setState(() {
@@ -53,14 +84,263 @@ class _WordCardState extends State<WordCard> {
 
   @override
   void dispose() {
+    _flipController.dispose();
     _scrollController.dispose();
     _exampleScrollController.dispose();
     super.dispose();
   }
 
+  void _onTap() {
+    if (_flipController.isAnimating) return;
+    if (_isFlipped) {
+      _flipController.reverse();
+    } else {
+      _flipController.forward();
+    }
+    setState(() => _isFlipped = !_isFlipped);
+  }
+
   @override
   Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _flipAnimation,
+      builder: (context, _) {
+        final angle = _flipAnimation.value * pi;
+        final showFront = _flipAnimation.value < 0.5;
+        // 앞면: 0→π/2, 뒷면: angle-π 로 -π/2→0 (거울 반전 없음)
+        final rotateAngle = showFront ? angle : angle - pi;
+
+        return Transform(
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.001)
+            ..rotateY(rotateAngle),
+          alignment: Alignment.center,
+          child: showFront ? _buildFront() : _buildBack(),
+        );
+      },
+    );
+  }
+
+  // 앞면: 일본어 단어만 (정사각형, 중앙 배치)
+  Widget _buildFront() {
+    return GestureDetector(
+      onTap: _onTap,
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 1.0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade200,
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  widget.word.content,
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 뒷면: 의미, 예문, 버튼
+  Widget _buildBack() {
     final word = widget.word;
+    return _CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 책 아이콘 + 발음 버튼
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _CardIconButton(icon: Icons.menu_book_outlined),
+              SizedBox(width: 8),
+              // TODO [기능 추가 시]: 발음 버튼 누르면 TTS 재생
+              _CardIconButton(icon: Icons.volume_up_outlined),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // 일본어 단어
+          Center(
+            child: Text(
+              word.content,
+              style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w500),
+            ),
+          ),
+
+          // 후리가나 · 로마지
+          if (word.furigana.isNotEmpty || word.romaji.isNotEmpty)
+            Center(
+              child: Text(
+                word.furigana.isNotEmpty && word.romaji.isNotEmpty
+                    ? '${word.furigana} · ${word.romaji}'
+                    : word.furigana.isNotEmpty
+                        ? word.furigana
+                        : word.romaji,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ),
+
+          const SizedBox(height: 20),
+
+          // 의미: 항상 3칸 높이 고정 + 넘치면 스크롤
+          _InfoRow(
+            label: '의미',
+            content: SizedBox(
+              height: 93,
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (int i = 0; i < word.meaning.length; i++)
+                          _MeaningItem(index: i + 1, text: word.meaning[i]),
+                      ],
+                    ),
+                  ),
+                  if (_showFade)
+                    const Positioned(
+                      bottom: 0, left: 0, right: 0,
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0x00FFFFFF), Colors.white],
+                            ),
+                          ),
+                          child: SizedBox(height: 32, width: double.infinity),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // 예문: 항상 고정 높이 + 넘치면 스크롤 (없으면 라벨 숨기고 빈 공간)
+          const SizedBox(height: 8),
+          word.examples.isEmpty
+              ? const SizedBox(height: 120)
+              : _InfoRow(
+                  label: '예문',
+                  content: SizedBox(
+                    height: 120,
+                    child: Stack(
+                      children: [
+                        SingleChildScrollView(
+                          controller: _exampleScrollController,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final ex in word.examples)
+                                _ExampleItem(example: ex),
+                            ],
+                          ),
+                        ),
+                        if (_showExampleFade)
+                          const Positioned(
+                            bottom: 0, left: 0, right: 0,
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [Color(0x00FFFFFF), Colors.white],
+                                  ),
+                                ),
+                                child: SizedBox(height: 32, width: double.infinity),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+
+          const SizedBox(height: 16),
+
+          // 몰라요 / 알아요 / 이전 버튼 (옵션)
+          if (widget.onUnknown != null || widget.onKnown != null || widget.onPrevious != null) ...[
+            Row(
+              children: [
+                if (widget.onUnknown != null)
+                  Expanded(
+                    child: _CardActionButton(
+                      label: '몰라요',
+                      color: const Color(0xFFE64A19),
+                      onTap: widget.onUnknown!,
+                    ),
+                  ),
+                if (widget.onUnknown != null && widget.onKnown != null)
+                  const SizedBox(width: 12),
+                if (widget.onKnown != null)
+                  Expanded(
+                    child: _CardActionButton(
+                      label: '알아요',
+                      color: const Color(0xFF1976D2),
+                      onTap: widget.onKnown!,
+                    ),
+                  ),
+              ],
+            ),
+            if (widget.onPrevious != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Expanded(child: SizedBox()),
+                  Expanded(
+                    flex: 2,
+                    child: _CardActionButton(
+                      label: '이전',
+                      color: Colors.grey.shade300,
+                      textColor: Colors.grey.shade600,
+                      onTap: widget.onPrevious!,
+                    ),
+                  ),
+                  const Expanded(child: SizedBox()),
+                ],
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// 카드 공통 컨테이너 (앞/뒷면 동일한 스타일)
+// ============================================================
+class _CardContainer extends StatelessWidget {
+  final Widget child;
+
+  const _CardContainer({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
@@ -77,154 +357,7 @@ class _WordCardState extends State<WordCard> {
             ),
           ],
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 책 아이콘 + 발음 버튼
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _CardIconButton(icon: Icons.menu_book_outlined),
-                  SizedBox(width: 8),
-                  // TODO [기능 추가 시]: 발음 버튼 누르면 TTS 재생
-                  _CardIconButton(icon: Icons.volume_up_outlined),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // 일본어 단어
-              Text(
-                word.content,
-                style: const TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-
-              // 후리가나 · 로마지
-              if (word.furigana.isNotEmpty || word.romaji.isNotEmpty)
-                Text(
-                  word.furigana.isNotEmpty && word.romaji.isNotEmpty
-                      ? '${word.furigana} · ${word.romaji}'
-                      : word.furigana.isNotEmpty
-                          ? word.furigana
-                          : word.romaji,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-
-              const SizedBox(height: 20),
-
-              // 의미 (3개 이하: 그냥 표시 / 4개 이상: 스크롤 + 하단 페이드)
-              _InfoRow(
-                label: '의미',
-                content: word.meaning.length <= 3
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (int i = 0; i < word.meaning.length; i++)
-                            _MeaningItem(index: i + 1, text: word.meaning[i]),
-                        ],
-                      )
-                    : SizedBox(
-                        height: 93,
-                        child: Stack(
-                          children: [
-                            SingleChildScrollView(
-                              controller: _scrollController,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  for (int i = 0; i < word.meaning.length; i++)
-                                    _MeaningItem(index: i + 1, text: word.meaning[i]),
-                                ],
-                              ),
-                            ),
-                            if (_showFade)
-                              const Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: IgnorePointer(
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color(0x00FFFFFF),
-                                          Colors.white,
-                                        ],
-                                      ),
-                                    ),
-                                    child: SizedBox(height: 32, width: double.infinity),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-              ),
-
-              // 예문 (없으면 숨김)
-              if (word.examples.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _InfoRow(
-                  label: '예문',
-                  content: word.examples.length <= 3
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (final ex in word.examples)
-                              _ExampleItem(example: ex),
-                          ],
-                        )
-                      : SizedBox(
-                          height: 150,
-                          child: Stack(
-                            children: [
-                              SingleChildScrollView(
-                                controller: _exampleScrollController,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (final ex in word.examples)
-                                      _ExampleItem(example: ex),
-                                  ],
-                                ),
-                              ),
-                              if (_showExampleFade)
-                                const Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: IgnorePointer(
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Color(0x00FFFFFF),
-                                            Colors.white,
-                                          ],
-                                        ),
-                                      ),
-                                      child: SizedBox(height: 32, width: double.infinity),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                ),
-              ],
-
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
+        child: child,
       ),
     );
   }
@@ -246,10 +379,7 @@ class _MeaningItem extends StatelessWidget {
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(
-        '$index。$text',
-        style: const TextStyle(fontSize: 13),
-      ),
+      child: Text('$index。$text', style: const TextStyle(fontSize: 13)),
     );
   }
 }
@@ -297,10 +427,7 @@ class _InfoRow extends StatelessWidget {
       children: [
         SizedBox(
           width: 36,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
-          ),
+          child: Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
         ),
         const SizedBox(width: 8),
         Expanded(child: content),
@@ -323,6 +450,45 @@ class _CardIconButton extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Icon(icon, size: 18, color: Colors.grey.shade600),
+    );
+  }
+}
+
+class _CardActionButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final Color textColor;
+
+  const _CardActionButton({
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.textColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
