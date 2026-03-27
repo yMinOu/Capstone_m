@@ -12,6 +12,7 @@ import 'package:nihongo/features/learning/data/models/word_model.dart';
 import 'package:nihongo/features/learning/presentation/providers/learning_provider.dart';
 
 import 'package:nihongo/widgets/word_card.dart';
+import 'package:nihongo/features/stats/presentation/providers/stats_providers.dart';
 
 class WordStudyScreen extends ConsumerStatefulWidget {
   final String categoryId;
@@ -69,20 +70,20 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
   }
 
   // 알아요/몰라요 답변 처리 - 이전 답변이 있으면 카운트 교체
-  void _applyAnswer({required WordModel word, required String newStatus}) {
+  Future<void> _applyAnswer({
+    required WordModel word,
+    required String newStatus,
+  }) async {
     final prev = _wordAnswers[word.id];
-    if (prev == newStatus) return; // 같은 답변이면 무시
+    if (prev == newStatus) return;
 
     setState(() {
-      // 이전 답변 카운트 취소
       if (prev == 'know') _knownCount--;
       if (prev == 'dontKnow') _unknownCount--;
 
-      // 새 답변 카운트 적용
       if (newStatus == 'know') _knownCount++;
       if (newStatus == 'dontKnow') _unknownCount++;
 
-      // 처음 답변이면 학습 수 증가
       if (prev == null) _learnedCount++;
 
       _wordAnswers[word.id] = newStatus;
@@ -90,14 +91,17 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
 
     if (_uid != null) {
       if (prev == null) {
-        _userRepository!.incrementStudyCount(_uid!);
-        _studyStatsRepository!.incrementDailyLearnedCount(_uid!);
+        await _userRepository!.incrementStudyCount(_uid!);
+        await _studyStatsRepository!.incrementDailyLearnedCount(_uid!);
       }
-      _learningProgressRepository!.updateStatus(
+
+      await _learningProgressRepository!.updateStatus(
         uid: _uid!,
         word: word,
         status: newStatus,
       );
+
+      ref.invalidate(statsProvider);
     }
   }
 
@@ -126,10 +130,16 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
     if (_uid != null && _studyStartTime != null) {
       final seconds = DateTime.now().difference(_studyStartTime!).inSeconds;
       print('[학습타이머] 종료 - 경과: ${seconds}초, uid: $_uid');
+
       if (seconds > 0) {
         _userRepository!.addStudySeconds(_uid!, seconds)
-            .then((_) => print('[학습타이머] Firestore 저장 완료'))
-            .catchError((e) => print('[학습타이머] Firestore 에러: $e'));
+            .then((_) {
+          print('[학습타이머] Firestore 저장 완료');
+          ref.invalidate(statsProvider);
+        })
+            .catchError((e) {
+          print('[학습타이머] Firestore 에러: $e');
+        });
         _studyStatsRepository!.addDailyStudySeconds(_uid!, seconds);
       }
     }
@@ -209,8 +219,8 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
                 WordCard(
                   word: word,
                   initialFlipped: _isCardFlipped,
-                  onUnknown: () {
-                    _applyAnswer(word: word, newStatus: 'dontKnow');
+                  onUnknown: () async {
+                    await _applyAnswer(word: word, newStatus: 'dontKnow');
                     if (safeIndex < words.length - 1) {
                       setState(() {
                         _currentIndex = safeIndex + 1;
@@ -218,8 +228,8 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
                       });
                     }
                   },
-                  onKnown: () {
-                    _applyAnswer(word: word, newStatus: 'know');
+                  onKnown: () async {
+                    await _applyAnswer(word: word, newStatus: 'know');
                     if (safeIndex < words.length - 1) {
                       setState(() {
                         _currentIndex = safeIndex + 1;
