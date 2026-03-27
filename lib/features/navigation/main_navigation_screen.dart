@@ -82,7 +82,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           type: BottomNavigationBarType.fixed,
-          elevation: 0, // 기본 그림자 제거 (겹침 방지)
+          elevation: 0,
+          // 기본 그림자 제거 (겹침 방지)
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.edit_outlined),
