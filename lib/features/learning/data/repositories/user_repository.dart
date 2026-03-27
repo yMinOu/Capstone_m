@@ -13,18 +13,18 @@ class UserRepository {
   // users/{uid}.totalStudySeconds 에 seconds 만큼 누적
   Future<void> addStudySeconds(String uid, int seconds) async {
     if (seconds <= 0) return;
-    await _firestore.collection('users').doc(uid).update({
+    await _firestore.collection('users').doc(uid).set({
       'totalStudySeconds': FieldValue.increment(seconds),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   // users/{uid}.totalStudyCount +1
   Future<void> incrementStudyCount(String uid) async {
-    await _firestore.collection('users').doc(uid).update({
+    await _firestore.collection('users').doc(uid).set({
       'totalStudyCount': FieldValue.increment(1),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   // 연속 학습일 업데이트 - 하루에 한 번만 실행됨
@@ -46,11 +46,11 @@ class UserRepository {
       newStreak = 1;
     }
 
-    await _firestore.collection('users').doc(uid).update({
+    await _firestore.collection('users').doc(uid).set({
       'streakDays': newStreak,
       'lastStudyDateKey': today,
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   String _todayKey() {
