@@ -6,19 +6,18 @@ import 'package:nihongo/features/stats/presentation/providers/stats_providers.da
 import 'package:nihongo/features/stats/presentation/widgets/stats_card_widget.dart';
 import 'package:nihongo/features/stats/presentation/widgets/stats_chart_widget.dart';
 
-class StatsScreen extends ConsumerStatefulWidget {
-  const StatsScreen({super.key});
+class StatsScreen extends ConsumerWidget {
+  final int animationSeed;
+
+  const StatsScreen({
+    super.key,
+    this.animationSeed = 0,
+  });
 
   @override
-  ConsumerState<StatsScreen> createState() => _StatsScreenState();
-}
-
-class _StatsScreenState extends ConsumerState<StatsScreen> {
-  StatsChartPeriod _selectedPeriod = StatsChartPeriod.daily;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(statsProvider);
+    final selectedPeriod = ref.watch(statsChartPeriodProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -27,11 +26,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           child: statsAsync.when(
             data: (stats) => _StatsContent(
               stats: stats,
-              selectedPeriod: _selectedPeriod,
+              animationSeed: animationSeed,
+              selectedPeriod: selectedPeriod,
               onPeriodChanged: (period) {
-                setState(() {
-                  _selectedPeriod = period;
-                });
+                ref.read(statsChartPeriodProvider.notifier).state = period;
               },
             ),
             loading: () => const Center(
@@ -52,11 +50,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
 class _StatsContent extends StatelessWidget {
   final StatsModel stats;
+  final int animationSeed;
   final StatsChartPeriod selectedPeriod;
   final ValueChanged<StatsChartPeriod> onPeriodChanged;
 
   const _StatsContent({
     required this.stats,
+    required this.animationSeed,
     required this.selectedPeriod,
     required this.onPeriodChanged,
   });
@@ -101,6 +101,7 @@ class _StatsContent extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           StatsChartWidget(
+            animationSeed: animationSeed,
             selectedPeriod: selectedPeriod,
             onPeriodChanged: onPeriodChanged,
             dailyItems: stats.dailyChart,

@@ -81,8 +81,6 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
       _isCardFlipped = false;
       _wordAnswers.clear();
     });
-
-    ref.invalidate(statsProvider);
   }
 
   // 알아요/몰라요 답변 처리
@@ -116,8 +114,6 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
         word: word,
         status: newStatus,
       );
-
-      ref.invalidate(statsProvider);
     }
   }
 
@@ -166,7 +162,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
 
       _hasSavedStudyTime = true;
 
-      ref.invalidate(statsProvider);
+      ref.read(statsProvider.notifier).refreshStatsSilently();
       print('[학습타이머] Firestore 저장 완료');
     } catch (e) {
       print('[학습타이머] Firestore 에러: $e');
@@ -331,7 +327,7 @@ class _TopBar extends StatelessWidget {
   final String title;
 
   // TODO [임시]: 개발 테스트용 초기화 콜백 - 배포 전 제거할 것
-  final VoidCallback onReset;
+  final Future<void> Function() onReset;
   final Future<void> Function() onBack;
 
   const _TopBar({
@@ -365,7 +361,9 @@ class _TopBar extends StatelessWidget {
         // TODO [임시]: 개발 테스트용 초기화 버튼 - 배포 전 제거할 것
         IconButton(
           icon: const Icon(Icons.refresh, color: Colors.grey),
-          onPressed: onReset,
+          onPressed: () async {
+            await onReset();
+          },
         ),
       ],
     );

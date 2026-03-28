@@ -11,6 +11,7 @@ enum StatsChartPeriod {
 }
 
 class StatsChartWidget extends StatefulWidget {
+  final int animationSeed;
   final StatsChartPeriod selectedPeriod;
   final ValueChanged<StatsChartPeriod> onPeriodChanged;
   final List<StatsChartItem> dailyItems;
@@ -19,6 +20,7 @@ class StatsChartWidget extends StatefulWidget {
 
   const StatsChartWidget({
     super.key,
+    required this.animationSeed,
     required this.selectedPeriod,
     required this.onPeriodChanged,
     required this.dailyItems,
@@ -40,6 +42,10 @@ class _StatsChartWidgetState extends State<StatsChartWidget> {
     if (oldWidget.selectedPeriod != widget.selectedPeriod) {
       _selectedIndex = null;
     }
+
+    if (oldWidget.animationSeed != widget.animationSeed) {
+      _selectedIndex = null;
+    }
   }
 
   @override
@@ -57,7 +63,7 @@ class _StatsChartWidgetState extends State<StatsChartWidget> {
     };
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(
@@ -72,7 +78,7 @@ class _StatsChartWidgetState extends State<StatsChartWidget> {
             selectedPeriod: widget.selectedPeriod,
             onPeriodChanged: widget.onPeriodChanged,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           Text(
             title,
             style: const TextStyle(
@@ -81,12 +87,24 @@ class _StatsChartWidgetState extends State<StatsChartWidget> {
               color: Colors.black,
             ),
           ),
+          const SizedBox(height: 8),
+          const Text(
+            '그래프를 클릭하면 학습 시간을 확인할 수 있어요',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF7A7A7A),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 20),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
             switchInCurve: Curves.easeOut,
             switchOutCurve: Curves.easeOut,
             child: _AnimatedBarChart(
-              key: ValueKey(widget.selectedPeriod),
+              key: ValueKey(
+                '${widget.selectedPeriod.name}_${widget.animationSeed}',
+              ),
               items: items,
               selectedIndex: _selectedIndex,
               onItemTap: (index) {
@@ -118,28 +136,37 @@ class _PeriodTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
+      height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFFF4F4F4),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFE5E5E5),
+        ),
       ),
       child: Row(
         children: [
-          _PeriodTabButton(
-            title: '일간',
-            isSelected: selectedPeriod == StatsChartPeriod.daily,
-            onTap: () => onPeriodChanged(StatsChartPeriod.daily),
+          Expanded(
+            child: _PeriodTabButton(
+              title: '일간',
+              isSelected: selectedPeriod == StatsChartPeriod.daily,
+              onTap: () => onPeriodChanged(StatsChartPeriod.daily),
+            ),
           ),
-          _PeriodTabButton(
-            title: '주간',
-            isSelected: selectedPeriod == StatsChartPeriod.weekly,
-            onTap: () => onPeriodChanged(StatsChartPeriod.weekly),
+          Expanded(
+            child: _PeriodTabButton(
+              title: '주간',
+              isSelected: selectedPeriod == StatsChartPeriod.weekly,
+              onTap: () => onPeriodChanged(StatsChartPeriod.weekly),
+            ),
           ),
-          _PeriodTabButton(
-            title: '월간',
-            isSelected: selectedPeriod == StatsChartPeriod.monthly,
-            onTap: () => onPeriodChanged(StatsChartPeriod.monthly),
+          Expanded(
+            child: _PeriodTabButton(
+              title: '월간',
+              isSelected: selectedPeriod == StatsChartPeriod.monthly,
+              onTap: () => onPeriodChanged(StatsChartPeriod.monthly),
+            ),
           ),
         ],
       ),
@@ -160,25 +187,32 @@ class _PeriodTabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.black : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: isSelected
+              ? [
+            const BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 8,
+              offset: Offset(0, 3),
             ),
+          ]
+              : null,
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: isSelected ? Colors.white : const Color(0xFF666666),
           ),
         ),
       ),
@@ -203,7 +237,7 @@ class _AnimatedBarChart extends StatelessWidget {
     final maxValue = _resolveMaxValue(items);
 
     return SizedBox(
-      height: 260,
+      height: 300,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -277,7 +311,7 @@ class _AnimatedBarChart extends StatelessWidget {
     }
 
     final rounded = ((rawMax / 4).ceil()) * 4;
-    return math.max(rounded, 4);
+    return math.max(rounded + (rounded * 0.1).ceil(), 4);
   }
 }
 
@@ -317,7 +351,7 @@ class _AnimatedBarItem extends StatelessWidget {
                   alignment: Alignment.bottomCenter,
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
-                    duration: Duration(milliseconds: 420 + (index * 70)),
+                    duration: Duration(milliseconds: 750 + (index * 100)),
                     curve: Curves.easeOutCubic,
                     builder: (context, animatedRatio, child) {
                       return FractionallySizedBox(
@@ -326,11 +360,23 @@ class _AnimatedBarItem extends StatelessWidget {
                         child: child,
                       );
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.black,
+                        color: isSelected
+                            ? Colors.black
+                            : const Color(0xFF2D2D2D),
                         borderRadius: BorderRadius.circular(8),
+                        boxShadow: isSelected
+                            ? [
+                          const BoxShadow(
+                            color: Color(0x18000000),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ]
+                            : null,
                         border: isSelected
                             ? Border.all(
                           color: const Color(0xFF444444),
@@ -343,7 +389,7 @@ class _AnimatedBarItem extends StatelessWidget {
                 ),
                 if (isSelected)
                   Positioned(
-                    bottom: ((ratio.clamp(0.0, 1.0)) * 220) + 8,
+                    bottom: ((ratio.clamp(0.0, 1.0)) * 220) + 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -352,6 +398,13 @@ class _AnimatedBarItem extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Text(
                         '$value분',
