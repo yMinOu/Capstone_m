@@ -311,7 +311,9 @@ class _AnimatedBarChart extends StatelessWidget {
     }
 
     final rounded = ((rawMax / 4).ceil()) * 4;
-    return math.max(rounded + (rounded * 0.1).ceil(), 4);
+    final headroom = math.max((rounded * 0.2).ceil(), 2);
+
+    return math.max(rounded + headroom, 4);
   }
 }
 
@@ -343,80 +345,89 @@ class _AnimatedBarItem extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Expanded(
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              clipBehavior: Clip.none,
-              children: [
-                Align(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final availableHeight = constraints.maxHeight;
+                final barTopOffset =
+                (ratio.clamp(0.0, 1.0) * availableHeight);
+                final tooltipBottom = barTopOffset + 5;
+
+                return Stack(
                   alignment: Alignment.bottomCenter,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
-                    duration: Duration(milliseconds: 750 + (index * 100)),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, animatedRatio, child) {
-                      return FractionallySizedBox(
-                        heightFactor: animatedRatio,
-                        alignment: Alignment.bottomCenter,
-                        child: child,
-                      );
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.black
-                            : const Color(0xFF2D2D2D),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: isSelected
-                            ? [
-                          const BoxShadow(
-                            color: Color(0x18000000),
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
+                  clipBehavior: Clip.none,
+                  children: [
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),
+                        duration: Duration(milliseconds: 750 + (index * 100)),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, animatedRatio, child) {
+                          return FractionallySizedBox(
+                            heightFactor: animatedRatio,
+                            alignment: Alignment.bottomCenter,
+                            child: child,
+                          );
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.black
+                                : const Color(0xFF2D2D2D),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: isSelected
+                                ? [
+                              const BoxShadow(
+                                color: Color(0x18000000),
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ]
+                                : null,
+                            border: isSelected
+                                ? Border.all(
+                              color: const Color(0xFF444444),
+                              width: 2,
+                            )
+                                : null,
                           ),
-                        ]
-                            : null,
-                        border: isSelected
-                            ? Border.all(
-                          color: const Color(0xFF444444),
-                          width: 2,
-                        )
-                            : null,
-                      ),
-                    ),
-                  ),
-                ),
-                if (isSelected)
-                  Positioned(
-                    bottom: ((ratio.clamp(0.0, 1.0)) * 220) + 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        '$value분',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ),
-              ],
+                    if (isSelected)
+                      Positioned(
+                        bottom: tooltipBottom,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '$value분',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 10),
