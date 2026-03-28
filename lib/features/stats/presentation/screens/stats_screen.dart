@@ -4,12 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/stats/data/models/stats_model.dart';
 import 'package:nihongo/features/stats/presentation/providers/stats_providers.dart';
 import 'package:nihongo/features/stats/presentation/widgets/stats_card_widget.dart';
+import 'package:nihongo/features/stats/presentation/widgets/stats_chart_widget.dart';
 
-class StatsScreen extends ConsumerWidget {
+class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends ConsumerState<StatsScreen> {
+  StatsChartPeriod _selectedPeriod = StatsChartPeriod.daily;
+
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(statsProvider);
 
     return Scaffold(
@@ -17,7 +25,15 @@ class StatsScreen extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: statsAsync.when(
-            data: (stats) => _StatsContent(stats: stats),
+            data: (stats) => _StatsContent(
+              stats: stats,
+              selectedPeriod: _selectedPeriod,
+              onPeriodChanged: (period) {
+                setState(() {
+                  _selectedPeriod = period;
+                });
+              },
+            ),
             loading: () => const Center(
               child: CircularProgressIndicator(),
             ),
@@ -36,20 +52,25 @@ class StatsScreen extends ConsumerWidget {
 
 class _StatsContent extends StatelessWidget {
   final StatsModel stats;
+  final StatsChartPeriod selectedPeriod;
+  final ValueChanged<StatsChartPeriod> onPeriodChanged;
 
   const _StatsContent({
     required this.stats,
+    required this.selectedPeriod,
+    required this.onPeriodChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final totalMinutes = (stats.totalStudySeconds / 60).floor();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: GridView.count(
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GridView.count(
+            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
             mainAxisSpacing: 16,
@@ -77,9 +98,18 @@ class _StatsContent extends StatelessWidget {
                 unit: '일',
               ),
             ],
-          )
-        ),
-      ],
+          ),
+          const SizedBox(height: 20),
+          StatsChartWidget(
+            selectedPeriod: selectedPeriod,
+            onPeriodChanged: onPeriodChanged,
+            dailyItems: stats.dailyChart,
+            weeklyItems: stats.weeklyChart,
+            monthlyItems: stats.monthlyChart,
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }

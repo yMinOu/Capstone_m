@@ -10,13 +10,13 @@ import 'package:nihongo/features/learning/data/repositories/study_stats_reposito
 import 'package:nihongo/features/learning/data/repositories/user_repository.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
 import 'package:nihongo/features/learning/presentation/providers/learning_provider.dart';
-
-import 'package:nihongo/widgets/word_card.dart';
 import 'package:nihongo/features/stats/presentation/providers/stats_providers.dart';
+import 'package:nihongo/widgets/word_card.dart';
 
 class WordStudyScreen extends ConsumerStatefulWidget {
   final String categoryId;
   final String categoryTitle;
+
   const WordStudyScreen({
     super.key,
     required this.categoryId,
@@ -33,13 +33,18 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
   int _knownCount = 0;
   int _unknownCount = 0;
   int _learnedCount = 0;
-  // wordId → 'know' | 'dontKnow' : 이전 답변 추적용
+
+  // wordId -> know | dontKnow
   final Map<String, String> _wordAnswers = {};
+
   DateTime? _studyStartTime;
   String? _uid;
   UserRepository? _userRepository;
   StudyStatsRepository? _studyStatsRepository;
   LearningProgressRepository? _learningProgressRepository;
+
+  bool _isSavingStudyTime = false;
+  bool _hasSavedStudyTime = false;
 
   @override
   void initState() {
@@ -49,27 +54,38 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
     _userRepository = ref.read(userRepositoryProvider);
     _studyStatsRepository = ref.read(studyStatsRepositoryProvider);
     _learningProgressRepository = ref.read(learningProgressRepositoryProvider);
+
     _loadInitialProgress();
-    if (_uid != null) _userRepository!.updateStreakIfNeeded(_uid!);
+
+    if (_uid != null) {
+      _userRepository!.updateStreakIfNeeded(_uid!);
+    }
+
     print('[학습타이머] 시작 - uid: $_uid');
   }
 
   // TODO [임시]: 개발 테스트용 초기화 - 배포 전 제거할 것
   Future<void> _resetProgress() async {
     if (_uid == null) return;
+
     await _learningProgressRepository!.resetProgress(
       uid: _uid!,
       subCategory: widget.categoryId,
     );
+
     setState(() {
       _knownCount = 0;
       _unknownCount = 0;
+      _learnedCount = 0;
       _currentIndex = 0;
+      _isCardFlipped = false;
       _wordAnswers.clear();
     });
+
+    ref.invalidate(statsProvider);
   }
 
-  // 알아요/몰라요 답변 처리 - 이전 답변이 있으면 카운트 교체
+  // 알아요/몰라요 답변 처리
   Future<void> _applyAnswer({
     required WordModel word,
     required String newStatus,
@@ -108,6 +124,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
   // 화면 진입 시 기존 학습 기록 불러오기
   Future<void> _loadInitialProgress() async {
     if (_uid == null) return;
+
     final results = await Future.wait([
       _learningProgressRepository!.getProgressCount(
         uid: _uid!,
@@ -115,8 +132,13 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
       ),
       _studyStatsRepository!.getDailyLearnedCount(_uid!),
     ]);
-    final progress = results[0] as ({int knownCount, int unknownCount, Map<String, String> wordAnswers});
+
+    final progress = results[0]
+    as ({int knownCount, int unknownCount, Map<String, String> wordAnswers});
     final learnedCount = results[1] as int;
+
+    if (!mounted) return;
+
     setState(() {
       _knownCount = progress.knownCount;
       _unknownCount = progress.unknownCount;
@@ -125,24 +147,36 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    if (_uid != null && _studyStartTime != null) {
-      final seconds = DateTime.now().difference(_studyStartTime!).inSeconds;
+  Future<void> _saveStudyTimeIfNeeded() async {
+    if (_isSavingStudyTime || _hasSavedStudyTime) return;
+    if (_uid == null || _studyStartTime == null) return;
+
+    final seconds = DateTime.now().difference(_studyStartTime!).inSeconds;
+    if (seconds <= 0) return;
+
+    _isSavingStudyTime = true;
+
+    try {
       print('[학습타이머] 종료 - 경과: ${seconds}초, uid: $_uid');
 
-      if (seconds > 0) {
-        _userRepository!.addStudySeconds(_uid!, seconds)
-            .then((_) {
-          print('[학습타이머] Firestore 저장 완료');
-          ref.invalidate(statsProvider);
-        })
-            .catchError((e) {
-          print('[학습타이머] Firestore 에러: $e');
-        });
-        _studyStatsRepository!.addDailyStudySeconds(_uid!, seconds);
-      }
+      await Future.wait([
+        _userRepository!.addStudySeconds(_uid!, seconds),
+        _studyStatsRepository!.addDailyStudySeconds(_uid!, seconds),
+      ]);
+
+      _hasSavedStudyTime = true;
+
+      ref.invalidate(statsProvider);
+      print('[학습타이머] Firestore 저장 완료');
+    } catch (e) {
+      print('[학습타이머] Firestore 에러: $e');
+    } finally {
+      _isSavingStudyTime = false;
     }
+  }
+
+  @override
+  void dispose() {
     super.dispose();
   }
 
@@ -150,105 +184,140 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
   Widget build(BuildContext context) {
     final asyncWords = ref.watch(wordListProvider(widget.categoryId));
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: asyncWords.when(
-          loading: () => Column(
-            children: [
-              _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ],
-          ),
-          error: (e, _) => Column(
-            children: [
-              _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    '단어를 불러오지 못했어요\n$e',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        await _saveStudyTimeIfNeeded();
+
+        if (mounted) {
+          Navigator.of(context).pop(result);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: asyncWords.when(
+            loading: () => Column(
+              children: [
+                _TopBar(
+                  title: widget.categoryTitle,
+                  onReset: _resetProgress,
+                  onBack: _saveStudyTimeIfNeeded,
                 ),
-              ),
-            ],
-          ),
-          data: (words) {
-            if (words.isEmpty) {
-              return Column(
-                children: [
-                  _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        '단어가 없습니다',
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            ),
+            error: (e, _) => Column(
+              children: [
+                _TopBar(
+                  title: widget.categoryTitle,
+                  onReset: _resetProgress,
+                  onBack: _saveStudyTimeIfNeeded,
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '단어를 불러오지 못했어요\n$e',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ),
-                ],
-              );
-            }
-
-            final safeIndex = _currentIndex.clamp(0, words.length - 1);
-            final word = words[safeIndex];
-
-            return SingleChildScrollView(
-              child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _TopBar(title: widget.categoryTitle, onReset: _resetProgress),
-
-                const SizedBox(height: 16),
-
-                Center(
-                  child: _StatsBadgeRow(
-                    learnedCount: _learnedCount,
-                    knownCount: _knownCount,
-                    unknownCount: _unknownCount,
-                    unseenCount: (words.length - _knownCount - _unknownCount).clamp(0, words.length),
-                  ),
                 ),
-
-                const SizedBox(height: 40),
-
-                // 플립 카드 (앞면: 단어만 / 뒷면: 전체 정보 + 버튼)
-                WordCard(
-                  word: word,
-                  initialFlipped: _isCardFlipped,
-                  onUnknown: () async {
-                    await _applyAnswer(word: word, newStatus: 'dontKnow');
-                    if (safeIndex < words.length - 1) {
-                      setState(() {
-                        _currentIndex = safeIndex + 1;
-                        _isCardFlipped = false;
-                      });
-                    }
-                  },
-                  onKnown: () async {
-                    await _applyAnswer(word: word, newStatus: 'know');
-                    if (safeIndex < words.length - 1) {
-                      setState(() {
-                        _currentIndex = safeIndex + 1;
-                        _isCardFlipped = false;
-                      });
-                    }
-                  },
-                  onPrevious: safeIndex > 0
-                      ? () => setState(() {
-                          _currentIndex = safeIndex - 1;
-                          _isCardFlipped = true; // 이전은 뒷면에서만 누를 수 있으므로 항상 뒷면으로
-                        })
-                      : null,
-                ),
-
-                const SizedBox(height: 24),
               ],
-            ));
-          },
+            ),
+            data: (words) {
+              if (words.isEmpty) {
+                return Column(
+                  children: [
+                    _TopBar(
+                      title: widget.categoryTitle,
+                      onReset: _resetProgress,
+                      onBack: _saveStudyTimeIfNeeded,
+                    ),
+                    const Expanded(
+                      child: Center(
+                        child: Text(
+                          '단어가 없습니다',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              final safeIndex = _currentIndex.clamp(0, words.length - 1);
+              final word = words[safeIndex];
+
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _TopBar(
+                      title: widget.categoryTitle,
+                      onReset: _resetProgress,
+                      onBack: _saveStudyTimeIfNeeded,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Center(
+                      child: _StatsBadgeRow(
+                        learnedCount: _learnedCount,
+                        knownCount: _knownCount,
+                        unknownCount: _unknownCount,
+                        unseenCount: (words.length - _knownCount - _unknownCount)
+                            .clamp(0, words.length),
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    WordCard(
+                      word: word,
+                      initialFlipped: _isCardFlipped,
+                      onUnknown: () async {
+                        await _applyAnswer(word: word, newStatus: 'dontKnow');
+
+                        if (!mounted) return;
+
+                        if (safeIndex < words.length - 1) {
+                          setState(() {
+                            _currentIndex = safeIndex + 1;
+                            _isCardFlipped = false;
+                          });
+                        }
+                      },
+                      onKnown: () async {
+                        await _applyAnswer(word: word, newStatus: 'know');
+
+                        if (!mounted) return;
+
+                        if (safeIndex < words.length - 1) {
+                          setState(() {
+                            _currentIndex = safeIndex + 1;
+                            _isCardFlipped = false;
+                          });
+                        }
+                      },
+                      onPrevious: safeIndex > 0
+                          ? () => setState(() {
+                        _currentIndex = safeIndex - 1;
+                        _isCardFlipped = true;
+                      })
+                          : null,
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -260,10 +329,16 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
 // ============================================================
 class _TopBar extends StatelessWidget {
   final String title;
+
   // TODO [임시]: 개발 테스트용 초기화 콜백 - 배포 전 제거할 것
   final VoidCallback onReset;
+  final Future<void> Function() onBack;
 
-  const _TopBar({required this.title, required this.onReset});
+  const _TopBar({
+    required this.title,
+    required this.onReset,
+    required this.onBack,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +346,12 @@ class _TopBar extends StatelessWidget {
       children: [
         IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () async {
+            await onBack();
+            if (context.mounted) {
+              Navigator.pop(context);
+            }
+          },
         ),
         Expanded(
           child: Text(
@@ -296,10 +376,10 @@ class _TopBar extends StatelessWidget {
 // 통계 뱃지 (학습 수 / 아는 단어 / 모르는 단어 / 안 본 단어)
 // ============================================================
 class _StatsBadgeRow extends StatelessWidget {
-  final int learnedCount;  // 알아요 + 몰라요 합계
-  final int knownCount;    // 알아요
-  final int unknownCount;  // 몰라요
-  final int unseenCount;   // 아직 안 본 단어
+  final int learnedCount;
+  final int knownCount;
+  final int unknownCount;
+  final int unseenCount;
 
   const _StatsBadgeRow({
     required this.learnedCount,
@@ -368,14 +448,14 @@ class _StatBadge extends StatelessWidget {
       children: [
         useCircleBackground
             ? Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: Colors.white, size: 14),
-              )
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 14),
+        )
             : Icon(icon, color: color, size: 20),
         const SizedBox(width: 4),
         Text(
@@ -389,4 +469,3 @@ class _StatBadge extends StatelessWidget {
     );
   }
 }
-
