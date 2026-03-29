@@ -1,4 +1,6 @@
 /// Firestore에서 사용자 통계 데이터를 불러오는 Repository.
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nihongo/features/stats/data/models/stats_model.dart';
@@ -6,6 +8,10 @@ import 'package:nihongo/features/stats/data/models/stats_model.dart';
 class StatsRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+
+  static const int _defaultWeaknessScore = 30;
+  static const int _minWeaknessScore = 10;
+  static const int _maxWeaknessScore = 100;
 
   StatsRepository({
     required FirebaseFirestore firestore,
@@ -25,6 +31,7 @@ class StatsRepository {
     final todayKey = _formatDateKey(now);
 
     final userDoc = await _firestore.collection('users').doc(uid).get();
+    final userData = userDoc.data() ?? {};
 
     final dailyDoc = await _firestore
         .collection('users')
@@ -40,8 +47,8 @@ class StatsRepository {
       endDate: now,
     );
 
-    final userData = userDoc.data() ?? {};
     final dailyData = dailyDoc.data() ?? {};
+    final weakAreas = _buildWeakAreasFromUser(userData);
 
     final totalStudySeconds =
         (userData['totalStudySeconds'] as num?)?.toInt() ?? 0;
@@ -63,6 +70,8 @@ class StatsRepository {
       dailyChart: _buildDailyChart(now, dailyStatsMap),
       weeklyChart: _buildWeeklyChart(now, dailyStatsMap),
       monthlyChart: _buildMonthlyChart(now, dailyStatsMap),
+      weakAreas: weakAreas,
+      weakAreaMessage: _buildWeakAreaMessage(weakAreas),
     );
   }
 
@@ -92,6 +101,63 @@ class StatsRepository {
     }
 
     return result;
+  }
+
+  List<StatsWeakAreaItem> _buildWeakAreasFromUser(
+      Map<String, dynamic> userData,
+      ) {
+    final weakStats = (userData['weakStats'] as Map<String, dynamic>?) ?? {};
+
+    return [
+      _buildWeakAreaItemFromUser(weakStats, '단어'),
+      _buildWeakAreaItemFromUser(weakStats, '한자'),
+      _buildWeakAreaItemFromUser(weakStats, '예문'),
+      _buildWeakAreaItemFromUser(weakStats, '가타카나'),
+      _buildWeakAreaItemFromUser(weakStats, '히라가나'),
+      _buildWeakAreaItemFromUser(weakStats, '스피킹'),
+    ];
+  }
+
+  StatsWeakAreaItem _buildWeakAreaItemFromUser(
+      Map<String, dynamic> weakStats,
+      String label,
+      ) {
+    final target = (weakStats[label] as Map<String, dynamic>?) ?? {};
+
+    final score = (target['score'] as num?)?.toInt() ?? _defaultWeaknessScore;
+
+    return StatsWeakAreaItem(
+      label: label,
+      weaknessPercent: score.clamp(
+        _minWeaknessScore,
+        _maxWeaknessScore,
+      ),
+    );
+  }
+
+  String _buildWeakAreaMessage(List<StatsWeakAreaItem> weakAreas) {
+    if (weakAreas.isEmpty) {
+      return '학습을 시작하면 약한 영역을 분석해드릴게요!';
+    }
+
+    final sorted = [...weakAreas]
+      ..sort((a, b) => a.weaknessPercent.compareTo(b.weaknessPercent));
+
+    final weakest = sorted.first;
+
+    final hasStudiedAnyArea = weakAreas.any(
+          (item) => item.weaknessPercent != _defaultWeaknessScore,
+    );
+
+    if (!hasStudiedAnyArea) {
+      return '학습을 시작하면 약한 영역을 분석해드릴게요!';
+    }
+
+    if (weakest.weaknessPercent <= _defaultWeaknessScore) {
+      return '균형 있게 잘 학습하고 있어요!';
+    }
+
+    return '${weakest.label} 학습을 더 집중해보세요!';
   }
 
   List<StatsChartItem> _buildDailyChart(
@@ -127,7 +193,6 @@ class StatsRepository {
 
     for (int i = 4; i >= 0; i--) {
       final weekStart = currentWeekMonday.subtract(Duration(days: i * 7));
-      final weekEnd = weekStart.add(const Duration(days: 6));
 
       int totalSeconds = 0;
 

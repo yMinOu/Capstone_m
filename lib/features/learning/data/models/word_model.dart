@@ -8,7 +8,10 @@ class WordExample {
   final String content; // 일본어 예문
   final String meaning; // 예문 뜻
 
-  const WordExample({required this.content, required this.meaning});
+  const WordExample({
+    required this.content,
+    required this.meaning,
+  });
 
   factory WordExample.fromMap(Map<String, dynamic> map) {
     return WordExample(
@@ -19,30 +22,38 @@ class WordExample {
 }
 
 class WordModel {
-  final String id;               // 문서 ID
-  final String content;          // 한자/단어 (예: 同感)
-  final String furigana;         // 후리가나 (예: どうかん)
-  final String romaji;           // 로마자 (예: dokan)
-  final List<String> meaning;      // 의미 목록
+  final String id; // 문서 ID
+  final String category; // 큰 분류 (예: jlpt, hiragana, katakana)
+  final String subCategory; // 세부 분류 (예: N1)
+  final String contentType; // 데이터 종류 (예: word, kanji, sentence)
+  final String content; // 한자/단어/문자
+  final String furigana; // 후리가나
+  final String romaji; // 로마자
+  final List<String> meaning; // 의미 목록
   final List<WordExample> examples; // 예문 목록
-  final String subCategory;        // 레벨 (예: N1)
   final bool isActive;
 
   const WordModel({
     required this.id,
+    required this.category,
+    required this.subCategory,
+    required this.contentType,
     required this.content,
     required this.furigana,
     required this.romaji,
     required this.meaning,
     required this.examples,
-    required this.subCategory,
     required this.isActive,
   });
 
   factory WordModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
     return WordModel(
       id: doc.id,
+      category: data['category'] as String? ?? '',
+      subCategory: data['subCategory'] as String? ?? '',
+      contentType: data['contentType'] as String? ?? 'word',
       content: data['content'] as String? ?? '',
       furigana: data['furigana'] as String? ?? '',
       romaji: data['romaji'] as String? ?? '',
@@ -50,7 +61,6 @@ class WordModel {
       examples: (data['examples'] as List? ?? [])
           .map((e) => WordExample.fromMap(e as Map<String, dynamic>))
           .toList(),
-      subCategory: data['subCategory'] as String? ?? '',
       isActive: data['isActive'] as bool? ?? true,
     );
   }
