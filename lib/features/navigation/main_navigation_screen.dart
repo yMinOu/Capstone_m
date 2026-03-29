@@ -17,14 +17,7 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
-
-  static const List<Widget> _page = <Widget>[
-    LearningScreen(),
-    VocabularyScreen(),
-    CommunityScreen(),
-    StatsScreen(),
-    MyPageScreen(),
-  ];
+  int _statsAnimationSeed = 0;
 
   static const List<String> _appBarTitles = <String>[
     '학습',
@@ -34,9 +27,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     '마이페이지',
   ];
 
+  late final List<Widget> _pages = <Widget>[
+    const LearningScreen(),
+    const VocabularyScreen(),
+    const CommunityScreen(),
+    StatsScreen(animationSeed: _statsAnimationSeed),
+    const MyPageScreen(),
+  ];
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+
+      if (index == 3) {
+        _statsAnimationSeed++;
+        _pages[3] = StatsScreen(animationSeed: _statsAnimationSeed);
+      }
     });
   }
 
@@ -48,25 +54,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: _page,
+        children: _pages,
       ),
       floatingActionButton: _selectedIndex == 2
           ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CommunityWriteScreen(),
-                  ),
-                );
-              },
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.textWhite,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.edit),
-            )
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CommunityWriteScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.edit),
+      )
           : null,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -83,7 +89,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           onTap: _onItemTapped,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          // 기본 그림자 제거 (겹침 방지)
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.edit_outlined),
