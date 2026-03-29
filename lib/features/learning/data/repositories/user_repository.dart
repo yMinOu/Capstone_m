@@ -67,4 +67,13 @@ class UserRepository {
       return false;
     }
   }
+
+  Future<void> addStudyCount(String uid, int count) async {
+    if (count <= 0) return;
+
+    await _firestore.collection('users').doc(uid).set({
+      'totalStudyCount': FieldValue.increment(count),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 }

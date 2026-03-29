@@ -62,4 +62,21 @@ class StudyStatsRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  Future<void> addDailyLearnedCount(String uid, int count) async {
+    if (count <= 0) return;
+
+    final dateKey = _todayKey();
+
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('daily_stats')
+        .doc(dateKey)
+        .set({
+      'dateKey': dateKey,
+      'learnedCount': FieldValue.increment(count),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 }

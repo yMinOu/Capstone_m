@@ -1,6 +1,5 @@
 /// FirebaseAuth + GoogleSignIn을 이용한 인증 로직 처리.
 /// 로그인, 로그아웃, 사용자 Firestore 동기화를 담당한다.
-///
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -23,7 +22,6 @@ class AuthRepository {
   }
 
   Future<User?> signInWithGoogle() async {
-    // 탈퇴/재인증 이후 꼬인 세션 방지
     await _googleSignIn.signOut();
 
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -57,26 +55,51 @@ class AuthRepository {
   Future<void> _ensureUserDocument(User user) async {
     final userRef = _firestore.collection('users').doc(user.uid);
     final snapshot = await userRef.get();
+    final data = snapshot.data() ?? {};
 
-    if (!snapshot.exists) {
-      await userRef.set({
-        'createdAt': FieldValue.serverTimestamp(),
-        'displayName': user.displayName,
-        'email': user.email,
-        'photoURL': user.photoURL,
-        'totalStudySeconds': 0,
-        'totalStudyCount': 0,
-      });
-      return;
-    }
-
-    await userRef.update({
+    await userRef.set({
+      'createdAt': data['createdAt'] ?? FieldValue.serverTimestamp(),
       'displayName': user.displayName,
       'email': user.email,
       'photoURL': user.photoURL,
-      'totalStudySeconds': snapshot.data()?['totalStudySeconds'] ?? 0,
-      'totalStudyCount': snapshot.data()?['totalStudyCount'] ?? 0,
-    });
+      'totalStudySeconds': data['totalStudySeconds'] ?? 0,
+      'totalStudyCount': data['totalStudyCount'] ?? 0,
+      'streakDays': data['streakDays'] ?? 0,
+      'lastStudyDateKey': data['lastStudyDateKey'],
+      'updatedAt': FieldValue.serverTimestamp(),
+      'weakStats': data['weakStats'] ?? {
+        '단어': {
+          'know': 0,
+          'dontKnow': 0,
+          'score': 30,
+        },
+        '한자': {
+          'know': 0,
+          'dontKnow': 0,
+          'score': 30,
+        },
+        '예문': {
+          'know': 0,
+          'dontKnow': 0,
+          'score': 30,
+        },
+        '가타카나': {
+          'know': 0,
+          'dontKnow': 0,
+          'score': 30,
+        },
+        '히라가나': {
+          'know': 0,
+          'dontKnow': 0,
+          'score': 30,
+        },
+        '스피킹': {
+          'know': 0,
+          'dontKnow': 0,
+          'score': 30,
+        },
+      },
+    }, SetOptions(merge: true));
   }
 
   Future<void> signOut() async {

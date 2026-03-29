@@ -48,7 +48,7 @@ class MyPageScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
-                          'assets/google_logo.png',
+                          'assets/images/common/google_logo.png',
                           width: 18,
                           height: 18,
                         ),

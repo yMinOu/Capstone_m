@@ -5,6 +5,8 @@ import 'package:nihongo/features/stats/data/models/stats_model.dart';
 import 'package:nihongo/features/stats/presentation/providers/stats_providers.dart';
 import 'package:nihongo/features/stats/presentation/widgets/stats_card_widget.dart';
 import 'package:nihongo/features/stats/presentation/widgets/stats_chart_widget.dart';
+import 'package:nihongo/features/stats/presentation/widgets/stats_badge_widget.dart';
+import 'package:nihongo/features/stats/presentation/widgets/stats_weak_area_widget.dart';
 
 class StatsScreen extends ConsumerWidget {
   final int animationSeed;
@@ -109,6 +111,18 @@ class _StatsContent extends StatelessWidget {
             monthlyItems: stats.monthlyChart,
           ),
           const SizedBox(height: 16),
+          StatsWeakAreaWidget(
+            key: ValueKey('weak_area_$animationSeed'),
+            animationSeed: animationSeed,
+            items: stats.weakAreas,
+            message: stats.weakAreaMessage,
+          ),
+          const SizedBox(height: 16),
+          StatsBadgeWidget(
+            streakDays: stats.streakDays,
+            totalStudyCount: stats.totalStudyCount,
+            totalStudySeconds: stats.totalStudySeconds,
+          ),
         ],
       ),
     );
