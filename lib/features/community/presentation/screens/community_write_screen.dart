@@ -3,23 +3,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nihongo/core/constants/app_colors.dart';
+import 'package:nihongo/features/community/data/models/post_model.dart';
 import 'package:nihongo/features/community/presentation/providers/community_provider.dart';
 
 class CommunityWriteScreen extends ConsumerStatefulWidget {
-  const CommunityWriteScreen({super.key});
+  final PostModel? post;
+  const CommunityWriteScreen({super.key, this.post});
 
   @override
   ConsumerState<CommunityWriteScreen> createState() => _CommunityWriteScreenState();
 }
 
 class _CommunityWriteScreenState extends ConsumerState<CommunityWriteScreen> {
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _contentController;
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
 
-  String _selectedCategory = '공부 이야기';
+  late String _selectedCategory;
   final List<String> _categories = ['공부 이야기', '스터디 모집', '문제 질문', '잡담'];
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.post?.title);
+    _contentController = TextEditingController(text: widget.post?.content);
+    
+    // widget.post?.category가 _categories에 있는지 확인 후 설정, 없으면 기본값 사용
+    if (widget.post != null && _categories.contains(widget.post!.category)) {
+      _selectedCategory = widget.post!.category;
+    } else {
+      _selectedCategory = '공부 이야기';
+    }
+  }
 
   @override
   void dispose() {
@@ -64,17 +80,26 @@ class _CommunityWriteScreenState extends ConsumerState<CommunityWriteScreen> {
       return;
     }
 
-    await ref.read(communityNotifierProvider.notifier).createPost(
-          title: title,
-          content: content,
-          category: _selectedCategory,
-        );
+    if (widget.post != null) {
+      await ref.read(postNotifierProvider.notifier).updatePost(
+            postId: widget.post!.id,
+            title: title,
+            content: content,
+            category: _selectedCategory,
+          );
+    } else {
+      await ref.read(postNotifierProvider.notifier).createPost(
+            title: title,
+            content: content,
+            category: _selectedCategory,
+          );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // 성공/실패 상태를 리스닝하여 처리
-    ref.listen<AsyncValue<void>>(communityNotifierProvider, (previous, next) {
+    ref.listen<AsyncValue<void>>(postNotifierProvider, (previous, next) {
       next.whenOrNull(
         data: (_) {
           if (mounted) {
@@ -83,15 +108,16 @@ class _CommunityWriteScreenState extends ConsumerState<CommunityWriteScreen> {
         },
         error: (error, stack) {
           if (mounted) {
+            final message = widget.post != null ? '수정' : '등록';
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('게시글 등록 중 오류가 발생했습니다: $error')),
+              SnackBar(content: Text('게시글 $message 중 오류가 발생했습니다: $error')),
             );
           }
         },
       );
     });
 
-    final state = ref.watch(communityNotifierProvider);
+    final state = ref.watch(postNotifierProvider);
     final isLoading = state.isLoading;
   // ... (the rest of the build method)
 
@@ -143,9 +169,9 @@ class _CommunityWriteScreenState extends ConsumerState<CommunityWriteScreen> {
                       color: AppColors.textBlack,
                     ),
                   )
-                : const Text(
-                    '등록',
-                    style: TextStyle(
+                : Text(
+                    widget.post != null ? '수정' : '등록',
+                    style: const TextStyle(
                       color: AppColors.textBlack,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

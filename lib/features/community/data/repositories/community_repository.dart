@@ -23,7 +23,7 @@ class CommunityRepository {
       'title': title,
       'content': content,
       'category': category,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': DateTime.now().toIso8601String(),
       'likes': [],
       'commentCount': 0,
     });
@@ -60,6 +60,14 @@ class CommunityRepository {
             .toList());
   }
 
+  Stream<PostModel> getPost(String postId) {
+    return _firestore
+        .collection('posts')
+        .doc(postId)
+        .snapshots()
+        .map((doc) => PostModel.fromFirestore(doc));
+  }
+
   Future<void> deletePost(String postId) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not logged in');
@@ -74,6 +82,30 @@ class CommunityRepository {
     await _firestore.collection('posts').doc(postId).delete();
   }
 
+  Future<void> updatePost({
+    required String postId,
+    required String title,
+    required String content,
+    required String category,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final doc = await _firestore.collection('posts').doc(postId).get();
+    if (!doc.exists) throw Exception('Post not found');
+    
+    if (doc.data()?['authorId'] != user.uid) {
+      throw Exception('You do not have permission to update this post');
+    }
+
+    await _firestore.collection('posts').doc(postId).update({
+      'title': title,
+      'content': content,
+      'category': category,
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
   Future<void> reportPost(String postId) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not logged in');
@@ -83,7 +115,7 @@ class CommunityRepository {
     await _firestore.collection('reports').add({
       'postId': postId,
       'reporterId': user.uid,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': DateTime.now().toIso8601String(),
       'status': 'pending',
     });
   }
@@ -96,7 +128,7 @@ class CommunityRepository {
       'postId': postId,
       'commentId': commentId,
       'reporterId': user.uid,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': DateTime.now().toIso8601String(),
       'status': 'pending',
     });
   }
@@ -114,9 +146,36 @@ class CommunityRepository {
         'authorId': user.uid,
         'authorName': user.displayName ?? '익명',
         'content': content,
-        'createdAt': FieldValue.serverTimestamp(),
+        'createdAt': DateTime.now().toIso8601String(),
+        'parentId': null,
       });
-      
+
+      transaction.update(postRef, {
+        'commentCount': FieldValue.increment(1),
+      });
+    });
+  }
+
+  Future<void> addReply({
+    required String postId,
+    required String parentId,
+    required String content,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final postRef = _firestore.collection('posts').doc(postId);
+    final replyRef = postRef.collection('comments').doc();
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.set(replyRef, {
+        'authorId': user.uid,
+        'authorName': user.displayName ?? '익명',
+        'content': content,
+        'createdAt': DateTime.now().toIso8601String(),
+        'parentId': parentId,
+      });
+
       transaction.update(postRef, {
         'commentCount': FieldValue.increment(1),
       });
@@ -135,6 +194,7 @@ class CommunityRepository {
             .toList());
   }
 
+
   Future<void> deleteComment(String postId, String commentId) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not logged in');
@@ -147,6 +207,33 @@ class CommunityRepository {
       transaction.update(postRef, {
         'commentCount': FieldValue.increment(-1),
       });
+    });
+  }
+
+  Future<void> updateComment({
+    required String postId,
+    required String commentId,
+    required String content,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final commentRef = _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId);
+        
+    final doc = await commentRef.get();
+    if (!doc.exists) throw Exception('Comment not found');
+    
+    if (doc.data()?['authorId'] != user.uid) {
+      throw Exception('You do not have permission to update this comment');
+    }
+
+    await commentRef.update({
+      'content': content,
+      'updatedAt': DateTime.now().toIso8601String(),
     });
   }
 }

@@ -1,21 +1,23 @@
 /// 하단 네비게이션을 통해 주요 화면 전환을 관리하는 screen.
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/core/constants/app_colors.dart';
 import 'package:nihongo/features/learning/presentation/screens/learning_screen.dart';
 import 'package:nihongo/features/vocabulary/presentation/screens/vocabulary_screen.dart';
 import 'package:nihongo/features/community/presentation/screens/community_screen.dart';
 import 'package:nihongo/features/community/presentation/screens/community_write_screen.dart';
+import 'package:nihongo/features/community/presentation/providers/community_provider.dart';
 import 'package:nihongo/features/stats/presentation/screens/stats_screen.dart';
 import 'package:nihongo/features/my_page/presentation/screens/my_page_screen.dart';
 
-class MainNavigationScreen extends StatefulWidget {
+class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  ConsumerState<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   int _selectedIndex = 0;
   int _statsAnimationSeed = 0;
 
@@ -48,6 +50,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final communityTab = ref.watch(communityTabProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_appBarTitles[_selectedIndex]),
@@ -56,7 +60,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
-      floatingActionButton: _selectedIndex == 2
+      floatingActionButton: (_selectedIndex == 2 && communityTab == 0)
           ? FloatingActionButton(
         onPressed: () {
           Navigator.push(

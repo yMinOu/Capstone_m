@@ -57,7 +57,10 @@ class PostModel {
     try {
       final rawCreatedAt = data?['createdAt'];
       if (rawCreatedAt is Timestamp) {
-        createdAt = rawCreatedAt.toDate();
+        // Timestamp를 로컬 시간으로 변환
+        createdAt = rawCreatedAt.toDate().toLocal();
+      } else if (rawCreatedAt is String) {
+        createdAt = DateTime.parse(rawCreatedAt).toLocal();
       } else {
         createdAt = DateTime.now();
       }

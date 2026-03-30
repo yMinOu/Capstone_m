@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/core/constants/app_colors.dart';
 import 'package:nihongo/features/community/data/models/post_model.dart';
+import 'package:nihongo/features/community/data/models/comment_model.dart';
 import 'package:nihongo/features/community/presentation/providers/community_provider.dart';
+import 'package:nihongo/features/community/presentation/screens/community_write_screen.dart';
 
 class PostDetailScreen extends ConsumerStatefulWidget {
   final PostModel post;
@@ -34,7 +36,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     try {
       // 댓글 등록 시도
-      await ref.read(communityNotifierProvider.notifier).addComment(widget.post.id, content);
+      await ref.read(commentNotifierProvider.notifier).addComment(widget.post.id, content);
       
       // 성공 시 입력창 비우기
       _commentController.clear();
@@ -55,16 +57,116 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     }
   }
 
+  Future<void> _editComment(String postId, String commentId, String initialContent) async {
+    final controller = TextEditingController(text: initialContent);
+    
+    final newContent = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('댓글 수정'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: '댓글을 입력하세요.',
+          ),
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('수정'),
+          ),
+        ],
+      ),
+    );
+
+    if (newContent != null && newContent.isNotEmpty && newContent != initialContent) {
+      try {
+        await ref.read(commentNotifierProvider.notifier).updateComment(postId, commentId, newContent);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('댓글이 수정되었습니다.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('수정 실패: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _showReplyDialog(String postId, String parentId, String parentAuthorName) async {
+    final controller = TextEditingController();
+    
+    final content = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: Text('$parentAuthorName님에게 답글 남기기'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: '답글을 입력하세요.',
+          ),
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('등록'),
+          ),
+        ],
+      ),
+    );
+
+    if (content != null && content.isNotEmpty) {
+      try {
+        await ref.read(commentNotifierProvider.notifier).addReply(
+          postId: postId,
+          parentId: parentId,
+          content: content,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('답글이 등록되었습니다.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('답글 등록 실패: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final commentsAsync = ref.watch(commentsProvider(widget.post.id));
     final repository = ref.watch(communityRepositoryProvider);
     final currentUserId = repository.currentUserId;
     
-    // 포스트의 실시간 상태를 위해 전체 포스트 목록에서 현재 포스트 찾기
-    final postsAsync = ref.watch(communityPostsProvider);
-    final post = postsAsync.whenOrNull(data: (posts) => posts.firstWhere((p) => p.id == widget.post.id, orElse: () => widget.post)) ?? widget.post;
+    // 특정 포스트만 실시간으로 가져오기
+    final postAsync = ref.watch(postProvider(widget.post.id));
+    final post = postAsync.maybeWhen(
+      data: (p) => p,
+      orElse: () => widget.post,
+    );
     
+    final commentsAsync = ref.watch(commentsProvider(post.id));
     final isLiked = post.likes.contains(currentUserId);
 
     return Scaffold(
@@ -77,95 +179,147 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         actions: [
           PopupMenuButton<String>(
             color: Colors.white,
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            icon: const Icon(Icons.more_vert, color: AppColors.textBlack),
             onSelected: (value) async {
-              if (value == 'delete') {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    backgroundColor: Colors.white,
-                    title: const Text('게시글 삭제'),
-                    content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('취소'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('삭제', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
+              switch (value) {
+                case 'edit':
                   try {
-                    await ref.read(communityNotifierProvider.notifier).deletePost(post.id);
-                    if (mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('게시글이 삭제되었습니다.')),
-                      );
-                    }
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CommunityWriteScreen(post: post),
+                      ),
+                    );
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('삭제 실패: $e')),
+                        SnackBar(content: Text('화면 이동 중 오류가 발생했습니다: $e')),
                       );
                     }
                   }
-                }
-              } else if (value == 'report') {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    backgroundColor: Colors.white,
-                    title: const Text('게시글 신고'),
-                    content: const Text('이 게시글을 신고하시겠습니까?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('취소'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('신고', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
-                  ),
-                );
+                  break;
+                  
+                case 'delete':
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.white,
+                      title: const Text('게시글 삭제'),
+                      content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('취소'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  );
 
-                if (confirm == true) {
-                  try {
-                    await ref.read(communityNotifierProvider.notifier).reportPost(post.id);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('신고가 접수되었습니다.')),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('신고 실패: $e')),
-                      );
+                  if (confirm == true) {
+                    try {
+                      await ref.read(postNotifierProvider.notifier).deletePost(post.id);
+                      if (mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('게시글이 삭제되었습니다.')),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('삭제 실패: $e')),
+                        );
+                      }
                     }
                   }
-                }
+                  break;
+                  
+                case 'report':
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.white,
+                      title: const Text('게시글 신고'),
+                      content: const Text('이 게시글을 신고하시겠습니까?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('취소'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('신고', style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      await ref.read(postNotifierProvider.notifier).reportPost(post.id);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('신고가 접수되었습니다.')),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('신고 실패: $e')),
+                        );
+                      }
+                    }
+                  }
+                  break;
               }
             },
-            itemBuilder: (context) => [
-              if (post.authorId == currentUserId)
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Text('삭제', style: TextStyle(color: Colors.red)),
-                )
-              else
-                const PopupMenuItem(
-                  value: 'report',
-                  child: Text('신고하기'),
-                ),
-            ],
-            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) {
+              final isAuthor = currentUserId != null && post.authorId == currentUserId;
+              
+              if (isAuthor) {
+                return [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_outlined, size: 20, color: Colors.black87),
+                        SizedBox(width: 8),
+                        Text('수정하기'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('삭제하기', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ];
+              } else {
+                return [
+                  const PopupMenuItem(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        Icon(Icons.report_gmailerrorred, size: 20, color: Colors.black87),
+                        SizedBox(width: 8),
+                        Text('신고하기'),
+                      ],
+                    ),
+                  ),
+                ];
+              }
+            },
           ),
         ],
       ),
@@ -208,7 +362,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         Row(
                           children: [
                             GestureDetector(
-                              onTap: () => ref.read(communityNotifierProvider.notifier).toggleLike(post.id),
+                              onTap: () => ref.read(postNotifierProvider.notifier).toggleLike(post.id),
                               child: Row(
                                 children: [
                                   Icon(isLiked ? Icons.favorite : Icons.favorite_border, 
@@ -236,126 +390,42 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   commentsAsync.when(
                     data: (comments) {
                       if (comments.isEmpty) {
-                        return const SizedBox.shrink(); // 댓글이 없으면 아무것도 표시 안 함
+                        return const SizedBox.shrink();
                       }
+                      
+                      // 부모 댓글만 필터링
+                      final parentComments = comments.where((c) => c.parentId == null).toList();
+                      
                       return ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: comments.length,
+                        itemCount: parentComments.length,
                         separatorBuilder: (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
-                          final comment = comments[index];
+                          final comment = parentComments[index];
                           final isCommentAuthor = comment.authorId == currentUserId;
                           
-                          return Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                    const Spacer(),
-                                    Text(_formatDateTime(comment.createdAt), style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
-                                    PopupMenuButton<String>(
-                                      color: Colors.white,
-                                      onSelected: (value) async {
-                                        if (value == 'delete') {
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              backgroundColor: Colors.white,
-                                              title: const Text('댓글 삭제'),
-                                              content: const Text('정말로 이 댓글을 삭제하시겠습니까?'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(context, false),
-                                                  child: const Text('취소'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(context, true),
-                                                  child: const Text('삭제', style: TextStyle(color: Colors.red)),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-
-                                          if (confirm == true) {
-                                            try {
-                                              await ref.read(communityNotifierProvider.notifier).deleteComment(post.id, comment.id);
-                                              if (mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('댓글이 삭제되었습니다.')),
-                                                );
-                                              }
-                                            } catch (e) {
-                                              if (mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('삭제 실패: $e')),
-                                                );
-                                              }
-                                            }
-                                          }
-                                        } else if (value == 'report') {
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              backgroundColor: Colors.white,
-                                              title: const Text('댓글 신고'),
-                                              content: const Text('이 댓글을 신고하시겠습니까?'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(context, false),
-                                                  child: const Text('취소'),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(context, true),
-                                                  child: const Text('신고', style: TextStyle(color: Colors.red)),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-
-                                          if (confirm == true) {
-                                            try {
-                                              await ref.read(communityNotifierProvider.notifier).reportComment(post.id, comment.id);
-                                              if (mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('신고가 접수되었습니다.')),
-                                                );
-                                              }
-                                            } catch (e) {
-                                              if (mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('신고 실패: $e')),
-                                                );
-                                              }
-                                            }
-                                          }
-                                        }
-                                      },
-                                      itemBuilder: (context) => [
-                                        if (isCommentAuthor)
-                                          const PopupMenuItem(
-                                            value: 'delete',
-                                            child: Text('삭제', style: TextStyle(color: Colors.red)),
-                                          )
-                                        else
-                                          const PopupMenuItem(
-                                            value: 'report',
-                                            child: Text('신고하기'),
-                                          ),
-                                      ],
-                                      icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textGrey),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                    ),
-                                  ],
+                          // 해당 댓글의 답글들 필터링
+                          final replies = comments.where((c) => c.parentId == comment.id).toList();
+                          
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 부모 댓글 표시
+                              _buildCommentItem(post, comment, isCommentAuthor, currentUserId),
+                              
+                              // 답글들 표시 (들여쓰기 적용)
+                              if (replies.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 30.0),
+                                  child: Column(
+                                    children: replies.map((reply) {
+                                      final isReplyAuthor = reply.authorId == currentUserId;
+                                      return _buildCommentItem(post, reply, isReplyAuthor, currentUserId, isReply: true);
+                                    }).toList(),
+                                  ),
                                 ),
-                                const SizedBox(height: 6),
-                                Text(comment.content, style: const TextStyle(fontSize: 14)),
-                              ],
-                            ),
+                            ],
                           );
                         },
                       );
@@ -412,6 +482,142 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentItem(PostModel post, CommentModel comment, bool isCommentAuthor, String? currentUserId, {bool isReply = false}) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (isReply) ...[
+                const Icon(Icons.subdirectory_arrow_right, size: 16, color: AppColors.textGrey),
+                const SizedBox(width: 8),
+              ],
+              Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Spacer(),
+              Text(_formatDateTime(comment.createdAt), style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
+              PopupMenuButton<String>(
+                color: Colors.white,
+                onSelected: (value) async {
+                  if (value == 'edit') {
+                    await _editComment(post.id, comment.id, comment.content);
+                  } else if (value == 'reply') {
+                    await _showReplyDialog(post.id, comment.id, comment.authorName);
+                  } else if (value == 'delete') {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: Colors.white,
+                        title: const Text('댓글 삭제'),
+                        content: const Text('정말로 이 댓글을 삭제하시겠습니까?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('취소'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      try {
+                        await ref.read(commentNotifierProvider.notifier).deleteComment(post.id, comment.id);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('댓글이 삭제되었습니다.')),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('삭제 실패: $e')),
+                          );
+                        }
+                      }
+                    }
+                  } else if (value == 'report') {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: Colors.white,
+                        title: const Text('댓글 신고'),
+                        content: const Text('이 댓글을 신고하시겠습니까?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('취소'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('신고', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      try {
+                        await ref.read(commentNotifierProvider.notifier).reportComment(post.id, comment.id);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('신고가 접수되었습니다.')),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('신고 실패: $e')),
+                          );
+                        }
+                      }
+                    }
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (isCommentAuthor) ...[
+                    if (!isReply)
+                      const PopupMenuItem(
+                        value: 'reply',
+                        child: Text('답글'),
+                      ),
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Text('수정'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('삭제', style: TextStyle(color: Colors.red)),
+                    ),
+                  ] else ...[
+                    if (!isReply)
+                      const PopupMenuItem(
+                        value: 'reply',
+                        child: Text('답글'),
+                      ),
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Text('신고하기'),
+                    ),
+                  ],
+                ],
+                icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textGrey),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(comment.content, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );

@@ -20,12 +20,19 @@ final communityPostsProvider = StreamProvider<List<PostModel>>((ref) {
   );
 });
 
+final postProvider = StreamProvider.family<PostModel, String>((ref, postId) {
+  final repository = ref.watch(communityRepositoryProvider);
+  return repository.getPost(postId);
+});
+
 final commentsProvider = StreamProvider.family<List<CommentModel>, String>((ref, postId) {
   final repository = ref.watch(communityRepositoryProvider);
   return repository.getComments(postId);
 });
 
 final communitySearchQueryProvider = StateProvider<String>((ref) => '');
+
+final communityTabProvider = StateProvider<int>((ref) => 0);
 
 final filteredCommunityPostsProvider = Provider<AsyncValue<List<PostModel>>>((ref) {
   final postsAsync = ref.watch(communityPostsProvider);
@@ -40,10 +47,11 @@ final filteredCommunityPostsProvider = Provider<AsyncValue<List<PostModel>>>((re
   });
 });
 
-class CommunityNotifier extends StateNotifier<AsyncValue<void>> {
+// Post 관련 상태 관리
+class PostNotifier extends StateNotifier<AsyncValue<void>> {
   final CommunityRepository _repository;
 
-  CommunityNotifier(this._repository) : super(const AsyncValue.data(null));
+  PostNotifier(this._repository) : super(const AsyncValue.data(null));
 
   Future<void> createPost({
     required String title,
@@ -73,17 +81,29 @@ class CommunityNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  Future<void> reportPost(String postId) async {
+  Future<void> updatePost({
+    required String postId,
+    required String title,
+    required String content,
+    required String category,
+  }) async {
+    state = const AsyncValue.loading();
     try {
-      await _repository.reportPost(postId);
+      await _repository.updatePost(
+        postId: postId,
+        title: title,
+        content: content,
+        category: category,
+      );
+      state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
   }
 
-  Future<void> reportComment(String postId, String commentId) async {
+  Future<void> reportPost(String postId) async {
     try {
-      await _repository.reportComment(postId, commentId);
+      await _repository.reportPost(postId);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
@@ -96,10 +116,33 @@ class CommunityNotifier extends StateNotifier<AsyncValue<void>> {
       state = AsyncValue.error(e, stack);
     }
   }
+}
+
+// Comment 관련 상태 관리
+class CommentNotifier extends StateNotifier<AsyncValue<void>> {
+  final CommunityRepository _repository;
+
+  CommentNotifier(this._repository) : super(const AsyncValue.data(null));
 
   Future<void> addComment(String postId, String content) async {
     try {
       await _repository.addComment(postId, content);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> addReply({
+    required String postId,
+    required String parentId,
+    required String content,
+  }) async {
+    try {
+      await _repository.addReply(
+        postId: postId,
+        parentId: parentId,
+        content: content,
+      );
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
@@ -112,9 +155,34 @@ class CommunityNotifier extends StateNotifier<AsyncValue<void>> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  Future<void> updateComment(String postId, String commentId, String content) async {
+    try {
+      await _repository.updateComment(
+        postId: postId,
+        commentId: commentId,
+        content: content,
+      );
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> reportComment(String postId, String commentId) async {
+    try {
+      await _repository.reportComment(postId, commentId);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
 }
 
-final communityNotifierProvider = StateNotifierProvider<CommunityNotifier, AsyncValue<void>>((ref) {
+final postNotifierProvider = StateNotifierProvider<PostNotifier, AsyncValue<void>>((ref) {
   final repository = ref.watch(communityRepositoryProvider);
-  return CommunityNotifier(repository);
+  return PostNotifier(repository);
+});
+
+final commentNotifierProvider = StateNotifierProvider<CommentNotifier, AsyncValue<void>>((ref) {
+  final repository = ref.watch(communityRepositoryProvider);
+  return CommentNotifier(repository);
 });

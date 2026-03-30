@@ -36,18 +36,20 @@ android {
     }
 
     signingConfigs {
-        create("dev") {
-            storeFile = file(keystoreProperties["devStoreFile"] as String)
-            storePassword = keystoreProperties["devStorePassword"] as String
-            keyAlias = keystoreProperties["devKeyAlias"] as String
-            keyPassword = keystoreProperties["devKeyPassword"] as String
-        }
+        if (keystorePropertiesFile.exists()) {
+            create("dev") {
+                storeFile = file(keystoreProperties["devStoreFile"] as String)
+                storePassword = keystoreProperties["devStorePassword"] as String
+                keyAlias = keystoreProperties["devKeyAlias"] as String
+                keyPassword = keystoreProperties["devKeyPassword"] as String
+            }
 
-        create("prod") {
-            storeFile = file(keystoreProperties["prodStoreFile"] as String)
-            storePassword = keystoreProperties["prodStorePassword"] as String
-            keyAlias = keystoreProperties["prodKeyAlias"] as String
-            keyPassword = keystoreProperties["prodKeyPassword"] as String
+            create("prod") {
+                storeFile = file(keystoreProperties["prodStoreFile"] as String)
+                storePassword = keystoreProperties["prodStorePassword"] as String
+                keyAlias = keystoreProperties["prodKeyAlias"] as String
+                keyPassword = keystoreProperties["prodKeyPassword"] as String
+            }
         }
     }
 
@@ -56,12 +58,16 @@ android {
     productFlavors {
         create("dev") {
             dimension = "env"
-            signingConfig = signingConfigs.getByName("dev")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("dev")
+            }
         }
 
         create("prod") {
             dimension = "env"
-            signingConfig = signingConfigs.getByName("prod")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("prod")
+            }
         }
     }
 
