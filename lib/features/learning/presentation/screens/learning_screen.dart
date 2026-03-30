@@ -1,17 +1,11 @@
 // ============================================================
 // 학습 화면 - 단어 / 한자 / 예문 탭 구성
 // ============================================================
-// 현재 구현 상태:
-//   - 단어 탭: Firestore 연동 완료
-//   - 한자 탭: 미구현 (준비 중 표시)
-//   - 예문 탭: Firestore 연동 완료
-//
-// TODO [한자 탭 구현 시]: _ComingSoonView() → 한자 전용 위젯으로 교체
-// ============================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/learning/presentation/providers/learning_provider.dart';
+import 'package:nihongo/features/learning/presentation/screens/kanji_study_screen.dart';
 import 'package:nihongo/features/learning/presentation/screens/sentence_study_screen.dart';
 import 'package:nihongo/features/learning/presentation/screens/word_study_screen.dart';
 
@@ -69,8 +63,7 @@ class _LearningScreenState extends ConsumerState<LearningScreen>
                   // 단어 탭 - UI 구현 완료
                   _WordTabView(),
 
-                  // TODO [한자 탭 구현 시]: _ComingSoonView() 를 한자 위젯으로 교체
-                  _ComingSoonView(),
+                  _KanjiTabView(),
 
                   _SentenceTabView(),
                 ],
@@ -190,19 +183,33 @@ class _SentenceTabView extends ConsumerWidget {
 }
 
 // ============================================================
-// 한자 탭 - 아직 미구현
+// 한자 탭 화면
 // ============================================================
-// TODO [구현 시]: 이 위젯 대신 한자 위젯으로 교체
-class _ComingSoonView extends StatelessWidget {
-  const _ComingSoonView();
+class _KanjiTabView extends ConsumerWidget {
+  const _KanjiTabView();
 
   @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        '준비 중입니다',
-        style: TextStyle(color: Colors.grey),
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(kanjiCategoryProvider);
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _CategoryCard(
+          category: category,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => KanjiStudyScreen(
+                categoryId: category.id,
+                categoryTitle: category.title,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
