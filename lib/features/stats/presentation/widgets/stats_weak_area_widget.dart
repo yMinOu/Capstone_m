@@ -22,8 +22,8 @@ class StatsWeakAreaWidget extends StatefulWidget {
 
 class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
     with SingleTickerProviderStateMixin {
-  static const double _chartWidth = 360;
-  static const double _chartHeight = 320;
+  static const double _maxChartWidth = 360;
+  static const double _chartAspectRatio = 0.9;
 
   late final AnimationController _fillAnimationController;
   late final Animation<double> _fillAnimation;
@@ -160,31 +160,33 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
           AnimatedBuilder(
             animation: _fillAnimation,
             builder: (context, child) {
-              final pointCenters = _RadarChartLayout.calculatePointCenters(
-                size: const Size(_chartWidth, _chartHeight),
-                items: items,
-                progress: _fillAnimation.value,
-              );
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final chartWidth = math.min(
+                    _maxChartWidth,
+                    constraints.maxWidth,
+                  );
+                  final chartHeight = chartWidth * _chartAspectRatio;
+                  final chartTop = 16.0;
+                  final chartLeft = (constraints.maxWidth - chartWidth) / 2;
 
-              return SizedBox(
-                height: 340,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final chartLeft = math.max(
-                      0.0,
-                      (constraints.maxWidth - _chartWidth) / 2,
-                    );
-                    const chartTop = 8.0;
+                  final pointCenters = _RadarChartLayout.calculatePointCenters(
+                    size: Size(chartWidth, chartHeight),
+                    items: items,
+                    progress: _fillAnimation.value,
+                  );
 
-                    return Stack(
+                  return SizedBox(
+                    height: chartHeight + 24,
+                    child: Stack(
                       clipBehavior: Clip.none,
                       children: [
                         Positioned(
                           left: chartLeft,
                           top: chartTop,
                           child: SizedBox(
-                            width: _chartWidth,
-                            height: _chartHeight,
+                            width: chartWidth,
+                            height: chartHeight,
                             child: CustomPaint(
                               painter: _RadarChartPainter(
                                 items: items,
@@ -234,15 +236,16 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
                             chartTop: chartTop,
                             point: pointCenters[_selectedIndex!],
                             score: items[_selectedIndex!].weaknessPercent,
+                            chartHeight: chartHeight,
                           ),
                       ],
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               );
             },
           ),
-          const SizedBox(height: 25),
+          const SizedBox(height: 40),
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: 14,
@@ -253,6 +256,7 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
                   '💡',
@@ -262,10 +266,13 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
                 Expanded(
                   child: Text(
                     widget.message,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF444444),
                       fontWeight: FontWeight.w500,
+                      height: 1.45,
                     ),
                   ),
                 ),
@@ -283,6 +290,7 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
     required double chartTop,
     required Offset point,
     required int score,
+    required double chartHeight,
   }) {
     const tooltipWidth = 52.0;
 
@@ -293,7 +301,7 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
         .clamp(0.0, math.max(0.0, constraints.maxWidth - tooltipWidth))
         .toDouble();
 
-    final top = desiredTop.clamp(0.0, 280.0).toDouble();
+    final top = desiredTop.clamp(0.0, chartTop + chartHeight - 28).toDouble();
 
     return Positioned(
       left: left,
