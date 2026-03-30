@@ -52,4 +52,34 @@ class WordRepository {
         .map((doc) => WordModel.fromFirestore(doc))
         .toList();
   }
+
+  // 히라가나 목록 가져오기
+  Future<List<WordModel>> fetchHiragana() async {
+    final snapshot = await _firestore
+        .collection('learning_contents')
+        .where('category', isEqualTo: 'hiragana')
+        .where('isActive', isEqualTo: true)
+        .where('contentType', isEqualTo: 'character')
+        .orderBy('order')
+        .get();
+
+    return snapshot.docs
+        .map((doc) => WordModel.fromFirestore(doc))
+        .toList();
+  }
+
+  // 가타카나 목록 가져오기
+  Future<List<WordModel>> fetchKatakana() async {
+    final snapshot = await _firestore
+        .collection('learning_contents')
+        .where('category', isEqualTo: 'katakana')
+        .where('isActive', isEqualTo: true)
+        .where('contentType', isEqualTo: 'character')
+        .orderBy('order')
+        .get();
+
+    return snapshot.docs
+        .map((doc) => WordModel.fromFirestore(doc))
+        .toList();
+  }
 }
