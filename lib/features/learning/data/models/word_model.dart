@@ -32,6 +32,8 @@ class WordModel {
   final List<String> meaning; // 의미 목록
   final List<WordExample> examples; // 예문 목록
   final bool isActive;
+  final String pronunciationKr; // 한국어 발음 (히라가나/가타카나용)
+  final int order; // 정렬 순서 (히라가나/가타카나용)
 
   const WordModel({
     required this.id,
@@ -44,6 +46,8 @@ class WordModel {
     required this.meaning,
     required this.examples,
     required this.isActive,
+    this.pronunciationKr = '',
+    this.order = 0,
   });
 
   factory WordModel.fromFirestore(DocumentSnapshot doc) {
@@ -64,6 +68,8 @@ class WordModel {
           .map((e) => WordExample.fromMap(e as Map<String, dynamic>))
           .toList(),
       isActive: data['isActive'] as bool? ?? true,
+      pronunciationKr: data['pronunciationKr'] as String? ?? '',
+      order: (data['order'] as num?)?.toInt() ?? 0,
     );
   }
 }

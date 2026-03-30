@@ -96,3 +96,15 @@ final kanjiListProvider =
   final repository = ref.read(wordRepositoryProvider);
   return repository.fetchKanjiByLevel(level);
 });
+
+// 히라가나 목록 (Firestore 조회)
+final hiraganaListProvider = FutureProvider<List<WordModel>>((ref) async {
+  final repository = ref.read(wordRepositoryProvider);
+  return repository.fetchHiragana();
+});
+
+// 가타카나 목록 (Firestore 조회)
+final katakanaListProvider = FutureProvider<List<WordModel>>((ref) async {
+  final repository = ref.read(wordRepositoryProvider);
+  return repository.fetchKatakana();
+});
