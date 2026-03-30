@@ -1,13 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/core/constants/app_colors.dart';
-import 'package:nihongo/features/community/data/models/post_model.dart';
 import 'package:nihongo/features/community/presentation/providers/community_provider.dart';
 import 'package:nihongo/features/community/presentation/screens/post_detail_screen.dart';
 
 class CommunityScreen extends ConsumerWidget {
   const CommunityScreen({super.key});
 
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedTab = ref.watch(communityTabProvider);
+
+    return Column(
+      children: [
+        // 상단 탭 버튼
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              _TabButton(
+                title: '커뮤니티',
+                isSelected: selectedTab == 0,
+                onTap: () => ref.read(communityTabProvider.notifier).state = 0,
+              ),
+              const SizedBox(width: 16),
+              _TabButton(
+                title: '스터디그룹',
+                isSelected: selectedTab == 1,
+                onTap: () => ref.read(communityTabProvider.notifier).state = 1,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: selectedTab == 0
+              ? _CommunityListView()
+              : const _StudyGroupView(),
+        ),
+      ],
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TabButton({
+    required this.title,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? AppColors.textBlack : AppColors.textGrey.withOpacity(0.5),
+            ),
+          ),
+          if (isSelected)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              height: 2,
+              width: 20,
+              color: AppColors.textBlack,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CommunityListView extends ConsumerWidget {
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -166,6 +240,20 @@ class CommunityScreen extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(child: Text('오류 발생: $err')),
+    );
+  }
+}
+
+class _StudyGroupView extends StatelessWidget {
+  const _StudyGroupView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text(
+        '스터디그룹 서비스 준비 중입니다.',
+        style: TextStyle(color: AppColors.textGrey),
+      ),
     );
   }
 }

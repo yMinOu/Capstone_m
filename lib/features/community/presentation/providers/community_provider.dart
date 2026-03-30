@@ -32,6 +32,8 @@ final commentsProvider = StreamProvider.family<List<CommentModel>, String>((ref,
 
 final communitySearchQueryProvider = StateProvider<String>((ref) => '');
 
+final communityTabProvider = StateProvider<int>((ref) => 0);
+
 final filteredCommunityPostsProvider = Provider<AsyncValue<List<PostModel>>>((ref) {
   final postsAsync = ref.watch(communityPostsProvider);
   final searchQuery = ref.watch(communitySearchQueryProvider).toLowerCase();
