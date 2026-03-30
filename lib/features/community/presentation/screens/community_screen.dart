@@ -19,7 +19,7 @@ class CommunityScreen extends ConsumerWidget {
           child: Row(
             children: [
               _TabButton(
-                title: '커뮤니티',
+                title: '게시판',
                 isSelected: selectedTab == 0,
                 onTap: () => ref.read(communityTabProvider.notifier).state = 0,
               ),
