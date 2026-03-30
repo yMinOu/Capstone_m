@@ -6,6 +6,7 @@ class CommentModel {
   final String authorName;
   final String content;
   final DateTime createdAt;
+  final String? parentId; // 대댓글인 경우 부모 댓글의 ID
 
   CommentModel({
     required this.id,
@@ -13,6 +14,7 @@ class CommentModel {
     required this.authorName,
     required this.content,
     required this.createdAt,
+    this.parentId,
   });
 
   factory CommentModel.fromFirestore(DocumentSnapshot doc) {
@@ -20,10 +22,12 @@ class CommentModel {
     
     DateTime createdAt;
     try {
-      // 서버 타임스탬프가 아직 없는 경우를 대비해 estimate 옵션 사용 시도 (doc.get 방식)
       final rawCreatedAt = data?['createdAt'];
       if (rawCreatedAt is Timestamp) {
-        createdAt = rawCreatedAt.toDate();
+        // Timestamp를 로컬 시간으로 변환
+        createdAt = rawCreatedAt.toDate().toLocal();
+      } else if (rawCreatedAt is String) {
+        createdAt = DateTime.parse(rawCreatedAt).toLocal();
       } else {
         createdAt = DateTime.now();
       }
@@ -37,6 +41,7 @@ class CommentModel {
       authorName: data?['authorName'] as String? ?? '익명',
       content: data?['content'] as String? ?? '',
       createdAt: createdAt,
+      parentId: data?['parentId'] as String?,
     );
   }
 }

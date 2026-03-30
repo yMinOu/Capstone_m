@@ -30,7 +30,7 @@ class CommunityScreen extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await ref.read(communityNotifierProvider.notifier).deletePost(postId);
+              await ref.read(postNotifierProvider.notifier).deletePost(postId);
             },
             child: const Text('삭제', style: TextStyle(color: Colors.red)),
           ),
@@ -129,7 +129,7 @@ class CommunityScreen extends ConsumerWidget {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => ref.read(communityNotifierProvider.notifier).toggleLike(post.id),
+                          onTap: () => ref.read(postNotifierProvider.notifier).toggleLike(post.id),
                           child: Row(
                             children: [
                               Icon(
