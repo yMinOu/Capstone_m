@@ -78,3 +78,21 @@ final sentenceListProvider =
   final repository = ref.read(wordRepositoryProvider);
   return repository.fetchSentencesByLevel(level);
 });
+
+// 한자 카테고리 목록
+final kanjiCategoryProvider = Provider<List<WordCategory>>((ref) {
+  return const [
+    WordCategory(id: 'N5', title: 'JLPT N5 필수 한자'),
+    WordCategory(id: 'N4', title: 'JLPT N4 필수 한자'),
+    WordCategory(id: 'N3', title: 'JLPT N3 필수 한자'),
+    WordCategory(id: 'N2', title: 'JLPT N2 필수 한자'),
+    WordCategory(id: 'N1', title: 'JLPT N1 필수 한자'),
+  ];
+});
+
+// 레벨별 한자 목록 (Firestore 조회)
+final kanjiListProvider =
+    FutureProvider.family<List<WordModel>, String>((ref, level) async {
+  final repository = ref.read(wordRepositoryProvider);
+  return repository.fetchKanjiByLevel(level);
+});

@@ -55,8 +55,10 @@ class WordModel {
       subCategory: data['subCategory'] as String? ?? '',
       contentType: data['contentType'] as String? ?? 'word',
       content: data['content'] as String? ?? '',
-      furigana: data['furigana'] as String? ?? '',
-      romaji: data['romaji'] as String? ?? '',
+      furigana: data['furigana'] as String? ??
+          (data['kunReading'] as List? ?? []).join('、'),
+      romaji: data['romaji'] as String? ??
+          (data['onReading'] as List? ?? []).join('、'),
       meaning: List<String>.from(data['meaning'] as List? ?? []),
       examples: (data['examples'] as List? ?? [])
           .map((e) => WordExample.fromMap(e as Map<String, dynamic>))
