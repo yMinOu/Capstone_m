@@ -238,65 +238,89 @@ class _AnimatedBarChart extends StatelessWidget {
 
     return SizedBox(
       height: 300,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: 34,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(5, (index) {
-                final value = ((maxValue * (4 - index)) / 4).round();
-                return Text(
-                  '$value',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF7A7A7A),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Stack(
-              children: [
-                Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const yAxisWidth = 34.0;
+          const gapBetweenAxisAndChart = 8.0;
+          const minBarSlotWidth = 44.0; // 막대 1개당 최소 너비
+          const chartHorizontalPadding = 4.0;
+
+          final chartAreaWidth =
+          math.max(
+            constraints.maxWidth - yAxisWidth - gapBetweenAxisAndChart,
+            items.length * minBarSlotWidth,
+          );
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: yAxisWidth,
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(
-                    5,
-                        (_) => Container(
-                      height: 1,
-                      color: const Color(0xFFE9E9E9),
+                  children: List.generate(5, (index) {
+                    final value = ((maxValue * (4 - index)) / 4).round();
+                    return Text(
+                      '$value',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF7A7A7A),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(width: gapBetweenAxisAndChart),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: chartAreaWidth,
+                    child: Stack(
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(
+                            5,
+                                (_) => Container(
+                              height: 1,
+                              color: const Color(0xFFE9E9E9),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: items.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            final isSelected = selectedIndex == index;
+
+                            return SizedBox(
+                              width: chartAreaWidth / items.length,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: chartHorizontalPadding,
+                                ),
+                                child: _AnimatedBarItem(
+                                  index: index,
+                                  label: item.label,
+                                  value: item.value,
+                                  maxValue: maxValue,
+                                  isSelected: isSelected,
+                                  onTap: () => onItemTap(index),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: items.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final item = entry.value;
-                    final isSelected = selectedIndex == index;
-
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: _AnimatedBarItem(
-                          index: index,
-                          label: item.label,
-                          value: item.value,
-                          maxValue: maxValue,
-                          isSelected: isSelected,
-                          onTap: () => onItemTap(index),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -415,12 +439,15 @@ class _AnimatedBarItem extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: Text(
-                            '$value분',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '$value분',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -433,8 +460,10 @@ class _AnimatedBarItem extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: isSelected ? Colors.black : const Color(0xFF666666),
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
