@@ -56,7 +56,7 @@ class MyWordDetailScreen extends ConsumerWidget {
       case 'character':
         return CharacterCard(
           character: model,
-          initialFlipped: true,
+          initialFlipped: false,
           onUnknown: () {},
           onKnown: () {},
         );

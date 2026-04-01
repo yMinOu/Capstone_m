@@ -1,4 +1,3 @@
-/// learning_contents 원본 학습 데이터 모델
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LearningContentExampleModel {
@@ -14,10 +13,23 @@ class LearningContentExampleModel {
 
   factory LearningContentExampleModel.fromMap(Map<String, dynamic> map) {
     return LearningContentExampleModel(
-      content: (map['content'] ?? '') as String,
-      furigana: map['furigana'] as String?,
-      meaning: (map['meaning'] ?? '') as String,
+      content: _asString(map['content']),
+      furigana: map['furigana']?.toString(),
+      meaning: _asMeaningString(map['meaning']),
     );
+  }
+
+  static String _asString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  static String _asMeaningString(dynamic value) {
+    if (value == null) return '';
+    if (value is List) {
+      return value.map((e) => e.toString()).join(', ');
+    }
+    return value.toString();
   }
 }
 
@@ -65,31 +77,44 @@ class LearningContentModel {
       DocumentSnapshot<Map<String, dynamic>> doc,
       ) {
     final data = doc.data() ?? {};
-    final rawMeaning = (data['meaning'] as List<dynamic>? ?? []);
+    final rawMeaning = data['meaning'];
     final rawExamples = (data['examples'] as List<dynamic>? ?? []);
 
     return LearningContentModel(
       id: doc.id,
-      category: (data['category'] ?? '') as String,
-      subCategory: (data['subCategory'] ?? '') as String,
-      contentType: (data['contentType'] ?? '') as String,
-      content: (data['content'] ?? '') as String,
-      meaning: rawMeaning.map((e) => e.toString()).toList(),
-      sourceId: (data['sourceId'] ?? '') as String,
+      category: _asString(data['category']),
+      subCategory: _asString(data['subCategory']),
+      contentType: _asString(data['contentType']),
+      content: _asString(data['content']),
+      meaning: _asMeaningList(rawMeaning),
+      sourceId: _asString(data['sourceId']),
       isActive: (data['isActive'] ?? true) as bool,
       createdAt: _toNullableDateTime(data['createdAt']),
       updatedAt: _toNullableDateTime(data['updatedAt']),
-      furigana: (data['furigana'] ?? '') as String,
-      romaji: (data['romaji'] ?? '') as String,
-      onReading: (data['onReading'] ?? '') as String,
-      kunReading: (data['kunReading'] ?? '') as String,
-      pronunciationKr: (data['pronunciationKr'] ?? '') as String,
-      order: data['order'] as int?,
+      furigana: _asString(data['furigana']),
+      romaji: _asString(data['romaji']),
+      onReading: _asString(data['onReading']),
+      kunReading: _asString(data['kunReading']),
+      pronunciationKr: _asString(data['pronunciationKr']),
+      order: (data['order'] as num?)?.toInt(),
       examples: rawExamples
           .whereType<Map<String, dynamic>>()
           .map(LearningContentExampleModel.fromMap)
           .toList(),
     );
+  }
+
+  static List<String> _asMeaningList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e.toString()).toList();
+    }
+    return [value.toString()];
+  }
+
+  static String _asString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
   }
 
   static DateTime? _toNullableDateTime(dynamic value) {

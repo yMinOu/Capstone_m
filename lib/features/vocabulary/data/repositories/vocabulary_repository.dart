@@ -171,7 +171,7 @@ class VocabularyRepository {
 
   Stream<List<LearningProgressModel>> watchLearningProgressWords() {
     return _learningProgressRef
-        .orderBy('addedToWordbookAt', descending: true)
+        .orderBy('updatedAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
