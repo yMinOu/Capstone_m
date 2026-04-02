@@ -73,7 +73,7 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = null
+            signingConfig = signingConfigs.getByName("debug")
         }
 
         release {
