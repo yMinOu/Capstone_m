@@ -24,7 +24,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.month}/${dateTime.day} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    return '${dateTime.month.toString().padLeft(2, '0')}/${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _submitComment() async {
@@ -445,41 +445,39 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             ),
           ),
           // 댓글 입력창
-          Container(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 10,
-              top: 10,
-              left: 16,
-              right: 16,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: '댓글을 입력하세요.',
-                      hintStyle: const TextStyle(fontSize: 14),
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+          SafeArea(
+            bottom: true,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      decoration: InputDecoration(
+                        hintText: '댓글을 입력하세요.',
+                        hintStyle: const TextStyle(fontSize: 14),
+                        filled: true,
+                        fillColor: const Color(0xFFF5F5F5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _submitComment,
-                  icon: const Icon(Icons.send, color: AppColors.primary),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _submitComment,
+                    icon: const Icon(Icons.send, color: AppColors.primary),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

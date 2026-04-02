@@ -89,7 +89,7 @@ class _CommunityListView extends ConsumerWidget {
     if (difference.inMinutes < 1) return '방금 전';
     if (difference.inHours < 1) return '${difference.inMinutes}분 전';
     if (difference.inDays < 1) return '${difference.inHours}시간 전';
-    return '${dateTime.month}/${dateTime.day}';
+    return '${dateTime.month.toString().padLeft(2, '0')}/${dateTime.day.toString().padLeft(2, '0')}';
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref, String postId) {
