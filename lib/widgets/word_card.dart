@@ -49,6 +49,13 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
     _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
     );
+    // 애니메이션 완료 후 리셋 + 상태 업데이트
+    _flipController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() => _isFlipped = !_isFlipped);
+        _flipController.reset();
+      }
+    });
     _scrollController.addListener(() {
       final atBottom = _scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent;
@@ -66,13 +73,8 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
     super.didUpdateWidget(oldWidget);
     if (oldWidget.word.id != widget.word.id) {
       // 단어 바뀌면 initialFlipped에 따라 앞/뒷면으로 이동 (애니메이션 없이 즉시)
-      if (widget.initialFlipped) {
-        _flipController.value = 1.0;
-        _isFlipped = true;
-      } else {
-        _flipController.reset();
-        _isFlipped = false;
-      }
+      _flipController.reset();
+      _isFlipped = widget.initialFlipped;
       if (_scrollController.hasClients) _scrollController.jumpTo(0);
       if (_exampleScrollController.hasClients) _exampleScrollController.jumpTo(0);
       setState(() {
@@ -92,12 +94,7 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
 
   void _onTap() {
     if (_flipController.isAnimating) return;
-    if (_isFlipped) {
-      _flipController.reverse();
-    } else {
-      _flipController.forward();
-    }
-    setState(() => _isFlipped = !_isFlipped);
+    _flipController.forward();
   }
 
   @override
@@ -105,10 +102,22 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
     return AnimatedBuilder(
       animation: _flipAnimation,
       builder: (context, _) {
-        final angle = _flipAnimation.value * pi;
-        final showFront = _flipAnimation.value < 0.5;
-        // 앞면: 0→π/2, 뒷면: angle-π 로 -π/2→0 (거울 반전 없음)
-        final rotateAngle = showFront ? angle : angle - pi;
+        final progress = _flipAnimation.value;
+        final angle = progress * pi;
+
+        // 항상 왼쪽 방향으로만 회전
+        // progress < 0.5: 현재 보이는 면이 기울어지며 사라짐 (0 → π/2)
+        // progress >= 0.5: 다음 면이 왼쪽에서 나타남 (-π/2 → 0)
+        // _isFlipped는 애니메이션 완료 후 토글되므로, 전환 중엔 이전 상태 유지
+        final bool showFront;
+        final double rotateAngle;
+        if (progress < 0.5) {
+          showFront = !_isFlipped;
+          rotateAngle = angle;
+        } else {
+          showFront = _isFlipped;
+          rotateAngle = angle - pi;
+        }
 
         return Transform(
           transform: Matrix4.identity()

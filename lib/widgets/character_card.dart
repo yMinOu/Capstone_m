@@ -42,9 +42,14 @@ class _CharacterCardState extends State<CharacterCard>
     _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
     );
+    _flipController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() => _isFlipped = !_isFlipped);
+        _flipController.reset();
+      }
+    });
 
     if (widget.initialFlipped) {
-      _flipController.value = 1.0;
       _isFlipped = true;
     }
   }
@@ -53,13 +58,8 @@ class _CharacterCardState extends State<CharacterCard>
   void didUpdateWidget(CharacterCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.character.id != widget.character.id) {
-      if (widget.initialFlipped) {
-        _flipController.value = 1.0;
-        _isFlipped = true;
-      } else {
-        _flipController.reset();
-        _isFlipped = false;
-      }
+      _flipController.reset();
+      _isFlipped = widget.initialFlipped;
     }
   }
 
@@ -71,12 +71,7 @@ class _CharacterCardState extends State<CharacterCard>
 
   void _onTap() {
     if (_flipController.isAnimating) return;
-    if (_isFlipped) {
-      _flipController.reverse();
-    } else {
-      _flipController.forward();
-    }
-    setState(() => _isFlipped = !_isFlipped);
+    _flipController.forward();
   }
 
   @override
@@ -84,9 +79,18 @@ class _CharacterCardState extends State<CharacterCard>
     return AnimatedBuilder(
       animation: _flipAnimation,
       builder: (context, _) {
-        final angle = _flipAnimation.value * pi;
-        final showFront = _flipAnimation.value < 0.5;
-        final rotateAngle = showFront ? angle : angle - pi;
+        final progress = _flipAnimation.value;
+        final angle = progress * pi;
+
+        final bool showFront;
+        final double rotateAngle;
+        if (progress < 0.5) {
+          showFront = !_isFlipped;
+          rotateAngle = angle;
+        } else {
+          showFront = _isFlipped;
+          rotateAngle = angle - pi;
+        }
 
         return Transform(
           transform: Matrix4.identity()
