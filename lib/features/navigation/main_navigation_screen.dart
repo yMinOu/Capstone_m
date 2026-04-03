@@ -14,7 +14,8 @@ class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  ConsumerState<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  ConsumerState<MainNavigationScreen> createState() =>
+      _MainNavigationScreenState();
 }
 
 class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
@@ -29,13 +30,18 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     '마이페이지',
   ];
 
-  late final List<Widget> _pages = <Widget>[
-    const LearningScreen(),
-    const VocabularyScreen(),
-    const CommunityScreen(),
-    StatsScreen(animationSeed: _statsAnimationSeed),
-    const MyPageScreen(),
-  ];
+  List<Widget> _buildPages() {
+    return <Widget>[
+      const LearningScreen(),
+      const VocabularyScreen(),
+      const CommunityScreen(),
+      StatsScreen(
+        animationSeed: _statsAnimationSeed,
+        isActive: _selectedIndex == 3,
+      ),
+      const MyPageScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -43,7 +49,6 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
 
       if (index == 3) {
         _statsAnimationSeed++;
-        _pages[3] = StatsScreen(animationSeed: _statsAnimationSeed);
       }
     });
   }
@@ -51,17 +56,18 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final communityTab = ref.watch(communityTabProvider);
+    final pages = _buildPages();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_appBarTitles[_selectedIndex]),
         backgroundColor: _selectedIndex == 3
-            ? Color(0xFFFFF3F6)
+            ? const Color(0xFFFFF3F6)
             : Colors.white,
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: _pages,
+        children: pages,
       ),
       floatingActionButton: (_selectedIndex == 2)
           ? FloatingActionButton(
