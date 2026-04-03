@@ -10,6 +10,7 @@ class WordModel {
   final String status;
   final String subCategory;
   final String pronunciationKr;
+  final String contentType;
   final List<WordExample> examples;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -23,6 +24,7 @@ class WordModel {
     this.status = '',
     this.subCategory = '',
     this.pronunciationKr = '',
+    this.contentType = 'word',
     this.examples = const [],
     required this.createdAt,
     required this.updatedAt,
@@ -44,6 +46,7 @@ class WordModel {
       status: (data['status'] ?? '') as String,
       subCategory: (data['subCategory'] ?? '') as String,
       pronunciationKr: (data['pronunciationKr'] ?? '') as String,
+      contentType: (data['contentType'] ?? 'word') as String,
       examples: (data['examples'] as List<dynamic>? ?? [])
           .map(
             (e) => WordExample(

@@ -207,4 +207,50 @@ class VocabularyRepository {
       'updatedAt': Timestamp.fromDate(DateTime.now()),
     });
   }
+
+  Future<void> addLearningContentToVocabulary({
+    required String vocabularyId,
+    required LearningContentModel content,
+  }) async {
+    final vocabularyDoc = _vocabulariesRef.doc(vocabularyId);
+    final wordDoc = vocabularyDoc.collection('words').doc(content.id);
+    final now = Timestamp.fromDate(DateTime.now());
+
+    await _firestore.runTransaction((transaction) async {
+      final existingWord = await transaction.get(wordDoc);
+
+      if (existingWord.exists) {
+        throw Exception('이미 해당 단어장에 저장된 단어입니다.');
+      }
+
+      transaction.set(wordDoc, {
+        'content': content.content,
+        'word': content.content,
+        'meaning': content.meaning,
+        'furigana': content.furigana,
+        'romaji': content.romaji,
+        'subCategory': content.subCategory,
+        'pronunciationKr': content.pronunciationKr,
+        'contentType': content.contentType,
+        'sourceId': content.sourceId,
+        'status': '',
+        'examples': content.examples
+            .map(
+              (example) => {
+            'content': example.content,
+            'furigana': example.furigana,
+            'meaning': example.meaning,
+          },
+        )
+            .toList(),
+        'createdAt': now,
+        'updatedAt': now,
+      });
+
+      transaction.update(vocabularyDoc, {
+        'wordCount': FieldValue.increment(1),
+        'updatedAt': now,
+      });
+    });
+  }
 }

@@ -14,6 +14,8 @@ import 'package:nihongo/features/learning/presentation/providers/learning_provid
 import 'package:nihongo/features/stats/data/models/stats_model.dart';
 import 'package:nihongo/features/stats/presentation/providers/stats_providers.dart';
 import 'package:nihongo/widgets/character_card.dart';
+import 'package:nihongo/features/vocabulary/data/models/learning_content_model.dart';
+import 'package:nihongo/features/vocabulary/presentation/widgets/vocabulary_select_bottom_sheet.dart';
 
 class CharacterStudyScreen extends ConsumerStatefulWidget {
   final String title;
@@ -427,9 +429,44 @@ class _CharacterStudyScreenState extends ConsumerState<CharacterStudyScreen> {
                   CharacterCard(
                     character: character,
                     initialFlipped: _isCardFlipped,
+                    onTapVocabularySave: () {
+                      showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => VocabularySelectBottomSheet(
+                          content: LearningContentModel(
+                            id: character.id,
+                            category: character.category,
+                            subCategory: character.subCategory,
+                            contentType: character.contentType,
+                            content: character.content,
+                            meaning: character.meaning,
+                            sourceId: '',
+                            isActive: true,
+                            createdAt: null,
+                            updatedAt: null,
+                            furigana: character.furigana,
+                            romaji: character.romaji,
+                            onReading: '',
+                            kunReading: '',
+                            pronunciationKr: character.pronunciationKr,
+                            order: null,
+                            examples: character.examples
+                                .map(
+                                  (example) => LearningContentExampleModel(
+                                content: example.content,
+                                furigana: null,
+                                meaning: example.meaning,
+                              ),
+                            )
+                                .toList(),
+                          ),
+                        ),
+                      );
+                    },
                     onUnknown: () async {
-                      await _applyAnswer(
-                          character: character, newStatus: 'dontKnow');
+                      await _applyAnswer(character: character, newStatus: 'dontKnow');
                       if (!mounted) return;
                       if (safeIndex < characters.length - 1) {
                         setState(() {
@@ -439,8 +476,7 @@ class _CharacterStudyScreenState extends ConsumerState<CharacterStudyScreen> {
                       }
                     },
                     onKnown: () async {
-                      await _applyAnswer(
-                          character: character, newStatus: 'know');
+                      await _applyAnswer(character: character, newStatus: 'know');
                       if (!mounted) return;
                       if (safeIndex < characters.length - 1) {
                         setState(() {
@@ -451,9 +487,9 @@ class _CharacterStudyScreenState extends ConsumerState<CharacterStudyScreen> {
                     },
                     onPrevious: safeIndex > 0
                         ? () => setState(() {
-                              _currentIndex = safeIndex - 1;
-                              _isCardFlipped = true;
-                            })
+                      _currentIndex = safeIndex - 1;
+                      _isCardFlipped = true;
+                    })
                         : null,
                   ),
                   const SizedBox(height: 24),

@@ -14,6 +14,8 @@ import 'package:nihongo/features/learning/presentation/providers/learning_provid
 import 'package:nihongo/features/stats/data/models/stats_model.dart';
 import 'package:nihongo/features/stats/presentation/providers/stats_providers.dart';
 import 'package:nihongo/widgets/kanji_card.dart';
+import 'package:nihongo/features/vocabulary/data/models/learning_content_model.dart';
+import 'package:nihongo/features/vocabulary/presentation/widgets/vocabulary_select_bottom_sheet.dart';
 
 class KanjiStudyScreen extends ConsumerStatefulWidget {
   final String categoryId;
@@ -436,6 +438,42 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
                   KanjiCard(
                     word: kanji,
                     initialFlipped: _isCardFlipped,
+                    onTapVocabularySave: () {
+                      showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => VocabularySelectBottomSheet(
+                          content: LearningContentModel(
+                            id: kanji.id,
+                            category: kanji.category,
+                            subCategory: kanji.subCategory,
+                            contentType: kanji.contentType,
+                            content: kanji.content,
+                            meaning: kanji.meaning,
+                            sourceId: '',
+                            isActive: true,
+                            createdAt: null,
+                            updatedAt: null,
+                            furigana: kanji.furigana,
+                            romaji: kanji.romaji,
+                            onReading: '',
+                            kunReading: '',
+                            pronunciationKr: kanji.pronunciationKr,
+                            order: null,
+                            examples: kanji.examples
+                                .map(
+                                  (example) => LearningContentExampleModel(
+                                content: example.content,
+                                furigana: null,
+                                meaning: example.meaning,
+                              ),
+                            )
+                                .toList(),
+                          ),
+                        ),
+                      );
+                    },
                     onUnknown: () async {
                       await _applyAnswer(word: kanji, newStatus: 'dontKnow');
                       if (!mounted) return;
@@ -458,9 +496,9 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
                     },
                     onPrevious: safeIndex > 0
                         ? () => setState(() {
-                              _currentIndex = safeIndex - 1;
-                              _isCardFlipped = true;
-                            })
+                      _currentIndex = safeIndex - 1;
+                      _isCardFlipped = true;
+                    })
                         : null,
                   ),
                   const SizedBox(height: 24),
