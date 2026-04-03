@@ -55,6 +55,9 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_appBarTitles[_selectedIndex]),
+        backgroundColor: _selectedIndex == 3
+            ? Color(0xFFFFF3F6)
+            : Colors.white,
       ),
       body: IndexedStack(
         index: _selectedIndex,

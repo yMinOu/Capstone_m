@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  video_player: ^2.8.2
   flutter_riverpod: ^2.5.1
   sqflite: ^2.3.3
   path: ^1.9.0
@@ -72,6 +73,7 @@ flutter:
     - assets/images/
     - assets/images/common/
     - assets/images/stats/
+    - assets/images/stats/cat_video.mp4
 
   # To add assets to your application, add an assets section, like this:
 #  assets:

@@ -45,7 +45,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
                   ),
                   const SizedBox(width: 20),
                   _TopTabButton(
-                    title: '단어',
+                    title: '학습한 단어',
                     isSelected: !_isVocabularyTab,
                     onTap: () => setState(() => _isVocabularyTab = false),
                   ),
@@ -77,8 +77,8 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
                         context: context,
                         builder: (dialogContext) {
                           return AlertDialog(
-                            backgroundColor: Colors.white, // ⭐ 핵심 (흰색 배경)
-                            surfaceTintColor: Colors.white, // ⭐ 회색톤 제거
+                            backgroundColor: Colors.white,
+                            surfaceTintColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
