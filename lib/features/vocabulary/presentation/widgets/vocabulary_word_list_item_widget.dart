@@ -100,7 +100,7 @@ class VocabularyWordListItemWidget extends StatelessWidget {
     if (word.meaning.isEmpty) {
       return '';
     }
-    return word.meaning.join(', ');
+    return word.meaning.first;
   }
 
   Widget _buildStatusIcon(String status) {
