@@ -16,6 +16,8 @@ class PostDetailScreen extends ConsumerStatefulWidget {
 
 class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final _commentController = TextEditingController();
+  String? _replyToCommentId;
+  String? _replyToAuthorName;
 
   @override
   void dispose() {
@@ -35,23 +37,39 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     FocusScope.of(context).unfocus();
 
     try {
-      // 댓글 등록 시도
-      await ref.read(commentNotifierProvider.notifier).addComment(widget.post.id, content);
-      
-      // 성공 시 입력창 비우기
+      if (_replyToCommentId != null) {
+        // 답글 등록
+        await ref.read(commentNotifierProvider.notifier).addReply(
+              postId: widget.post.id,
+              parentId: _replyToCommentId!,
+              content: content,
+            );
+      } else {
+        // 댓글 등록 시도
+        await ref.read(commentNotifierProvider.notifier).addComment(widget.post.id, content);
+      }
+
+      // 성공 시 입력창 비우기 및 상태 초기화
       _commentController.clear();
-      
+      setState(() {
+        _replyToCommentId = null;
+        _replyToAuthorName = null;
+      });
+
       // 성공 피드백 (선택 사항)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('댓글이 등록되었습니다.'), duration: Duration(seconds: 1)),
+          SnackBar(
+            content: Text(_replyToCommentId != null ? '답글이 등록되었습니다.' : '댓글이 등록되었습니다.'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     } catch (e) {
       // 실패 시 에러 핸들링
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('댓글 등록에 실패했습니다: $e')),
+          SnackBar(content: Text('등록에 실패했습니다: $e')),
         );
       }
     }
@@ -97,57 +115,6 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('수정 실패: $e')),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _showReplyDialog(String postId, String parentId, String parentAuthorName) async {
-    final controller = TextEditingController();
-    
-    final content = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: Text('$parentAuthorName님에게 답글 남기기'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: '답글을 입력하세요.',
-          ),
-          maxLines: null,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('등록'),
-          ),
-        ],
-      ),
-    );
-
-    if (content != null && content.isNotEmpty) {
-      try {
-        await ref.read(commentNotifierProvider.notifier).addReply(
-          postId: postId,
-          parentId: parentId,
-          content: content,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('답글이 등록되었습니다.')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('답글 등록 실패: $e')),
           );
         }
       }
@@ -447,37 +414,65 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           // 댓글 입력창
           SafeArea(
             bottom: true,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      decoration: InputDecoration(
-                        hintText: '댓글을 입력하세요.',
-                        hintStyle: const TextStyle(fontSize: 14),
-                        filled: true,
-                        fillColor: const Color(0xFFF5F5F5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_replyToCommentId != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: Colors.grey[100],
+                    child: Row(
+                      children: [
+                        Text(
+                          '${_replyToAuthorName}님에게 답글 남기는 중...',
+                          style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _replyToCommentId = null;
+                              _replyToAuthorName = null;
+                            });
+                          },
+                          child: const Icon(Icons.close, size: 16, color: AppColors.textGrey),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _submitComment,
-                    icon: const Icon(Icons.send, color: AppColors.primary),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
                   ),
-                ],
-              ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: InputDecoration(
+                            hintText: _replyToCommentId != null ? '답글을 입력하세요.' : '댓글을 입력하세요.',
+                            hintStyle: const TextStyle(fontSize: 14),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: _submitComment,
+                        icon: const Icon(Icons.send, color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -486,137 +481,143 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Widget _buildCommentItem(PostModel post, CommentModel comment, bool isCommentAuthor, String? currentUserId, {bool isReply = false}) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (isReply) ...[
-                const Icon(Icons.subdirectory_arrow_right, size: 16, color: AppColors.textGrey),
-                const SizedBox(width: 8),
-              ],
-              Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              const Spacer(),
-              Text(_formatDateTime(comment.createdAt), style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
-              PopupMenuButton<String>(
-                color: Colors.white,
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    await _editComment(post.id, comment.id, comment.content);
-                  } else if (value == 'reply') {
-                    await _showReplyDialog(post.id, comment.id, comment.authorName);
-                  } else if (value == 'delete') {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: Colors.white,
-                        title: const Text('댓글 삭제'),
-                        content: const Text('정말로 이 댓글을 삭제하시겠습니까?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('취소'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('삭제', style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
+    final isSelected = _replyToCommentId == comment.id;
 
-                    if (confirm == true) {
-                      try {
-                        await ref.read(commentNotifierProvider.notifier).deleteComment(post.id, comment.id);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('댓글이 삭제되었습니다.')),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('삭제 실패: $e')),
-                          );
-                        }
-                      }
-                    }
-                  } else if (value == 'report') {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: Colors.white,
-                        title: const Text('댓글 신고'),
-                        content: const Text('이 댓글을 신고하시겠습니까?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('취소'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('신고', style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (confirm == true) {
-                      try {
-                        await ref.read(commentNotifierProvider.notifier).reportComment(post.id, comment.id);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('신고가 접수되었습니다.')),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('신고 실패: $e')),
-                          );
-                        }
-                      }
-                    }
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (isCommentAuthor) ...[
-                    if (!isReply)
-                      const PopupMenuItem(
-                        value: 'reply',
-                        child: Text('답글'),
-                      ),
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Text('수정'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('삭제', style: TextStyle(color: Colors.red)),
-                    ),
-                  ] else ...[
-                    if (!isReply)
-                      const PopupMenuItem(
-                        value: 'reply',
-                        child: Text('답글'),
-                      ),
-                    const PopupMenuItem(
-                      value: 'report',
-                      child: Text('신고하기'),
-                    ),
-                  ],
+    return GestureDetector(
+      onTap: () {
+        if (!isReply) {
+          setState(() {
+            if (_replyToCommentId == comment.id) {
+              _replyToCommentId = null;
+              _replyToAuthorName = null;
+            } else {
+              _replyToCommentId = comment.id;
+              _replyToAuthorName = comment.authorName;
+            }
+          });
+        }
+      },
+      child: Container(
+        color: isSelected ? Colors.grey[200] : Colors.transparent,
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (isReply) ...[
+                  const Icon(Icons.subdirectory_arrow_right, size: 16, color: AppColors.textGrey),
+                  const SizedBox(width: 8),
                 ],
-                icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textGrey),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(comment.content, style: const TextStyle(fontSize: 14)),
-        ],
+                Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Spacer(),
+                Text(_formatDateTime(comment.createdAt), style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
+                PopupMenuButton<String>(
+                  color: Colors.white,
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      await _editComment(post.id, comment.id, comment.content);
+                    } else if (value == 'delete') {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: Colors.white,
+                          title: const Text('댓글 삭제'),
+                          content: const Text('정말로 이 댓글을 삭제하시겠습니까?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('취소'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        try {
+                          await ref.read(commentNotifierProvider.notifier).deleteComment(post.id, comment.id);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('댓글이 삭제되었습니다.')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('삭제 실패: $e')),
+                            );
+                          }
+                        }
+                      }
+                    } else if (value == 'report') {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: Colors.white,
+                          title: const Text('댓글 신고'),
+                          content: const Text('이 댓글을 신고하시겠습니까?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('취소'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('신고', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        try {
+                          await ref.read(commentNotifierProvider.notifier).reportComment(post.id, comment.id);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('신고가 접수되었습니다.')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('신고 실패: $e')),
+                            );
+                          }
+                        }
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    if (isCommentAuthor) ...[
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('수정'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('삭제', style: TextStyle(color: Colors.red)),
+                      ),
+                    ] else ...[
+                      const PopupMenuItem(
+                        value: 'report',
+                        child: Text('신고하기'),
+                      ),
+                    ],
+                  ],
+                  icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textGrey),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(comment.content, style: const TextStyle(fontSize: 14)),
+          ],
+        ),
       ),
     );
   }

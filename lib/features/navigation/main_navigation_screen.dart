@@ -60,7 +60,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
-      floatingActionButton: (_selectedIndex == 2 && communityTab == 0)
+      floatingActionButton: (_selectedIndex == 2)
           ? FloatingActionButton(
         onPressed: () {
           Navigator.push(

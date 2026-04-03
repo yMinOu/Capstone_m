@@ -10,32 +10,29 @@ class CommunityScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedTab = ref.watch(communityTabProvider);
+    final categories = ['전체', '공부 이야기', '스터디 모집', '문제 질문', '잡담'];
 
     return Column(
       children: [
-        // 상단 탭 버튼
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+        // 상단 탭 버튼 (스크롤 가능하도록 함)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           child: Row(
-            children: [
-              _TabButton(
-                title: '게시판',
-                isSelected: selectedTab == 0,
-                onTap: () => ref.read(communityTabProvider.notifier).state = 0,
-              ),
-              const SizedBox(width: 16),
-              _TabButton(
-                title: '스터디그룹',
-                isSelected: selectedTab == 1,
-                onTap: () => ref.read(communityTabProvider.notifier).state = 1,
-              ),
-            ],
+            children: List.generate(categories.length, (index) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 20.0),
+                child: _TabButton(
+                  title: categories[index],
+                  isSelected: selectedTab == index,
+                  onTap: () => ref.read(communityTabProvider.notifier).state = index,
+                ),
+              );
+            }),
           ),
         ),
-        Expanded(
-          child: selectedTab == 0
-              ? _CommunityListView()
-              : const _StudyGroupView(),
+        const Expanded(
+          child: _CommunityListView(),
         ),
       ],
     );
@@ -82,6 +79,8 @@ class _TabButton extends StatelessWidget {
 }
 
 class _CommunityListView extends ConsumerWidget {
+  const _CommunityListView();
+
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -115,7 +114,7 @@ class _CommunityListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final postsAsync = ref.watch(communityPostsProvider);
+    final postsAsync = ref.watch(filteredCommunityPostsProvider);
     final repository = ref.watch(communityRepositoryProvider);
     final currentUserId = repository.currentUserId;
 
@@ -240,20 +239,6 @@ class _CommunityListView extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(child: Text('오류 발생: $err')),
-    );
-  }
-}
-
-class _StudyGroupView extends StatelessWidget {
-  const _StudyGroupView();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        '스터디그룹 서비스 준비 중입니다.',
-        style: TextStyle(color: AppColors.textGrey),
-      ),
     );
   }
 }
