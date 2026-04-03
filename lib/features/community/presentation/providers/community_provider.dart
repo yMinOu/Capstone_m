@@ -37,13 +37,28 @@ final communityTabProvider = StateProvider<int>((ref) => 0);
 final filteredCommunityPostsProvider = Provider<AsyncValue<List<PostModel>>>((ref) {
   final postsAsync = ref.watch(communityPostsProvider);
   final searchQuery = ref.watch(communitySearchQueryProvider).toLowerCase();
+  final selectedTabIndex = ref.watch(communityTabProvider);
+
+  final categories = ['전체', '공부 이야기', '스터디 모집', '문제 질문', '잡담'];
+  final selectedCategory = categories[selectedTabIndex];
 
   return postsAsync.whenData((posts) {
-    if (searchQuery.isEmpty) return posts;
-    return posts.where((post) {
-      return post.title.toLowerCase().contains(searchQuery) ||
-             post.content.toLowerCase().contains(searchQuery);
-    }).toList();
+    var filteredPosts = posts;
+
+    // 카테고리 필터링 (전체가 아닐 경우)
+    if (selectedCategory != '전체') {
+      filteredPosts = filteredPosts.where((post) => post.category == selectedCategory).toList();
+    }
+
+    // 검색어 필터링
+    if (searchQuery.isNotEmpty) {
+      filteredPosts = filteredPosts.where((post) {
+        return post.title.toLowerCase().contains(searchQuery) ||
+               post.content.toLowerCase().contains(searchQuery);
+      }).toList();
+    }
+
+    return filteredPosts;
   });
 });
 

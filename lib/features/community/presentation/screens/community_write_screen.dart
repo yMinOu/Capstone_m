@@ -277,7 +277,12 @@ class _CommunityWriteScreenState extends ConsumerState<CommunityWriteScreen> {
                   ),
                 ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: 12 + MediaQuery.of(context).padding.bottom,
+                ),
                 decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
