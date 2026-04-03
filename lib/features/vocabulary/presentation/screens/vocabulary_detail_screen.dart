@@ -4,6 +4,7 @@ import 'package:nihongo/features/vocabulary/data/models/vocabulary_model.dart';
 import 'package:nihongo/features/vocabulary/presentation/providers/vocabulary_provider.dart';
 import 'package:nihongo/features/vocabulary/presentation/widgets/vocabulary_word_list_item_widget.dart';
 import 'package:nihongo/features/vocabulary/presentation/widgets/word_add_dialog.dart';
+import 'package:nihongo/features/vocabulary/presentation/screens/vocabulary_word_detail_screen.dart';
 
 class VocabularyDetailScreen extends ConsumerWidget {
   const VocabularyDetailScreen({
@@ -81,6 +82,12 @@ class VocabularyDetailScreen extends ConsumerWidget {
                     return VocabularyWordListItemWidget(
                       word: word,
                       onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => VocabularyWordDetailScreen(word: word),
+                          ),
+                        );
                       },
                       onDelete: () => ref
                           .read(wordActionProvider.notifier)
@@ -100,38 +107,6 @@ class VocabularyDetailScreen extends ConsumerWidget {
         ),
         error: (err, _) => Center(
           child: Text('에러: $err'),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: SizedBox(
-        height: 42,
-        child: OutlinedButton.icon(
-          onPressed: () => showDialog(
-            context: context,
-            builder: (_) => WordAddDialog(vocabularyId: vocabulary.id),
-          ),
-          icon: const Icon(
-            Icons.menu_book_outlined,
-            size: 18,
-          ),
-          label: const Text(
-            '단어 추가',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF222222),
-            backgroundColor: Colors.white,
-            side: const BorderSide(
-              color: Color(0xFFBEBEBE),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-          ),
         ),
       ),
     );

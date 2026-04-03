@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/learning/presentation/providers/learning_provider.dart';
 import 'package:nihongo/widgets/sentence_card.dart';
+import 'package:nihongo/features/vocabulary/data/models/learning_content_model.dart';
+import 'package:nihongo/features/vocabulary/presentation/widgets/vocabulary_select_bottom_sheet.dart';
 
 class SentenceStudyScreen extends ConsumerStatefulWidget {
   final String categoryId;
@@ -96,6 +98,42 @@ class _SentenceStudyScreenState extends ConsumerState<SentenceStudyScreen> {
                 // 예문 카드 (버튼 포함)
                 SentenceCard(
                   sentence: sentence,
+                  onTapVocabularySave: () {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => VocabularySelectBottomSheet(
+                        content: LearningContentModel(
+                          id: sentence.id,
+                          category: sentence.category,
+                          subCategory: sentence.subCategory,
+                          contentType: sentence.contentType,
+                          content: sentence.content,
+                          meaning: sentence.meaning,
+                          sourceId: '',
+                          isActive: true,
+                          createdAt: null,
+                          updatedAt: null,
+                          furigana: sentence.furigana,
+                          romaji: sentence.romaji,
+                          onReading: '',
+                          kunReading: '',
+                          pronunciationKr: sentence.pronunciationKr,
+                          order: null,
+                          examples: sentence.examples
+                              .map(
+                                (example) => LearningContentExampleModel(
+                              content: example.content,
+                              furigana: null,
+                              meaning: example.meaning,
+                            ),
+                          )
+                              .toList(),
+                        ),
+                      ),
+                    );
+                  },
                   onPrevious: safeIndex > 0
                       ? () => setState(() => _currentIndex = safeIndex - 1)
                       : null,

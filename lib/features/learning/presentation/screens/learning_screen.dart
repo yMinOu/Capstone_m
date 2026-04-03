@@ -9,6 +9,8 @@ import 'package:nihongo/features/learning/presentation/screens/character_study_s
 import 'package:nihongo/features/learning/presentation/screens/kanji_study_screen.dart';
 import 'package:nihongo/features/learning/presentation/screens/sentence_study_screen.dart';
 import 'package:nihongo/features/learning/presentation/screens/word_study_screen.dart';
+import 'package:nihongo/features/vocabulary/data/models/learning_content_model.dart';
+import 'package:nihongo/features/vocabulary/presentation/widgets/vocabulary_select_bottom_sheet.dart';
 
 
 class LearningScreen extends ConsumerStatefulWidget {

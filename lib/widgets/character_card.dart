@@ -12,6 +12,7 @@ class CharacterCard extends StatefulWidget {
   final VoidCallback onUnknown;
   final VoidCallback onKnown;
   final VoidCallback? onPrevious;
+  final VoidCallback? onTapVocabularySave;
 
   const CharacterCard({
     super.key,
@@ -20,6 +21,7 @@ class CharacterCard extends StatefulWidget {
     required this.onUnknown,
     required this.onKnown,
     this.onPrevious,
+    this.onTapVocabularySave,
   });
 
   @override
@@ -103,7 +105,6 @@ class _CharacterCardState extends State<CharacterCard>
     );
   }
 
-  // 앞면: 문자만
   Widget _buildFront() {
     return GestureDetector(
       onTap: _onTap,
@@ -140,13 +141,12 @@ class _CharacterCardState extends State<CharacterCard>
     );
   }
 
-  // 뒷면: 아이콘 + 문자 + 발음 + 버튼
   Widget _buildBack() {
     final reading = widget.character.pronunciationKr.isNotEmpty
         ? widget.character.pronunciationKr
         : (widget.character.meaning.isNotEmpty
-            ? widget.character.meaning.first
-            : '');
+        ? widget.character.meaning.first
+        : '');
 
     return GestureDetector(
       onTap: _onTap,
@@ -169,19 +169,21 @@ class _CharacterCardState extends State<CharacterCard>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 아이콘
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  _IconBtn(icon: Icons.menu_book_outlined),
+                  _IconBtn(
+                    icon: Icons.menu_book_outlined,
+                    onTap: widget.onTapVocabularySave,
+                  ),
                   const SizedBox(width: 8),
-                  _IconBtn(icon: Icons.volume_up_outlined),
+                  _IconBtn(
+                    icon: Icons.volume_up_outlined,
+                    onTap: () {},
+                  ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
-              // 문자
               Text(
                 widget.character.content,
                 style: const TextStyle(
@@ -190,10 +192,7 @@ class _CharacterCardState extends State<CharacterCard>
                   height: 1.2,
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // 한국어 발음
               if (reading.isNotEmpty)
                 Text(
                   reading,
@@ -203,10 +202,7 @@ class _CharacterCardState extends State<CharacterCard>
                     color: Colors.black87,
                   ),
                 ),
-
               const SizedBox(height: 28),
-
-              // 몰라요 / 알아요
               Row(
                 children: [
                   Expanded(
@@ -226,8 +222,6 @@ class _CharacterCardState extends State<CharacterCard>
                   ),
                 ],
               ),
-
-              // 이전 버튼
               if (widget.onPrevious != null) ...[
                 const SizedBox(height: 8),
                 Row(
@@ -256,17 +250,30 @@ class _CharacterCardState extends State<CharacterCard>
 
 class _IconBtn extends StatelessWidget {
   final IconData icon;
-  const _IconBtn({required this.icon});
+  final VoidCallback? onTap;
+
+  const _IconBtn({
+    required this.icon,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.grey.shade300),
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Icon(icon, size: 18, color: Colors.grey.shade600),
+        ),
       ),
-      child: Icon(icon, size: 18, color: Colors.grey.shade600),
     );
   }
 }

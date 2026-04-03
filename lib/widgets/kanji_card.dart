@@ -12,6 +12,7 @@ class KanjiCard extends StatefulWidget {
   final VoidCallback? onKnown;
   final VoidCallback? onPrevious;
   final bool initialFlipped;
+  final VoidCallback? onTapVocabularySave;
 
   const KanjiCard({
     super.key,
@@ -20,6 +21,7 @@ class KanjiCard extends StatefulWidget {
     this.onKnown,
     this.onPrevious,
     this.initialFlipped = false,
+    this.onTapVocabularySave,
   });
 
   @override
@@ -166,12 +168,17 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 책 아이콘 + 발음 버튼
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                _CardIconButton(icon: Icons.menu_book_outlined),
-                SizedBox(width: 8),
-                _CardIconButton(icon: Icons.volume_up_outlined),
+                _CardIconButton(
+                  icon: Icons.menu_book_outlined,
+                  onTap: widget.onTapVocabularySave,
+                ),
+                const SizedBox(width: 8),
+                _CardIconButton(
+                  icon: Icons.volume_up_outlined,
+                ),
               ],
             ),
 
@@ -464,17 +471,30 @@ class _ExampleItem extends StatelessWidget {
 
 class _CardIconButton extends StatelessWidget {
   final IconData icon;
-  const _CardIconButton({required this.icon});
+  final VoidCallback? onTap;
+
+  const _CardIconButton({
+    required this.icon,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.grey.shade300),
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Icon(icon, size: 18, color: Colors.grey.shade600),
+        ),
       ),
-      child: Icon(icon, size: 18, color: Colors.grey.shade600),
     );
   }
 }

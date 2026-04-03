@@ -122,6 +122,27 @@ class WordActionNotifier extends StateNotifier<AsyncValue<void>> {
 
   final Ref _ref;
 
+  Future<bool> addLearningContentToVocabulary({
+    required String vocabularyId,
+    required LearningContentModel content,
+  }) async {
+    state = const AsyncLoading();
+    _ref.read(wordLoadingProvider.notifier).state = true;
+
+    try {
+      await _repository.addLearningContentToVocabulary(
+        vocabularyId: vocabularyId,
+        content: content,
+      );
+      state = const AsyncData(null);
+      return true;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      return false;
+    } finally {
+      _ref.read(wordLoadingProvider.notifier).state = false;
+    }
+  }
   VocabularyRepository get _repository =>
       _ref.read(vocabularyRepositoryProvider);
 
