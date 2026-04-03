@@ -202,10 +202,25 @@ class CommunityRepository {
     final postRef = _firestore.collection('posts').doc(postId);
     final commentRef = postRef.collection('comments').doc(commentId);
 
+    // 해당 댓글의 대댓글들을 모두 가져옴
+    final repliesSnapshot = await postRef
+        .collection('comments')
+        .where('parentId', isEqualTo: commentId)
+        .get();
+
     await _firestore.runTransaction((transaction) async {
+      // 본 댓글 삭제
       transaction.delete(commentRef);
+      
+      // 모든 대댓글 삭제
+      for (var doc in repliesSnapshot.docs) {
+        transaction.delete(doc.reference);
+      }
+
+      // 전체 삭제된 갯수(본 댓글 1개 + 대댓글 개수)만큼 카운트 감소
+      final totalDeleted = 1 + repliesSnapshot.docs.length;
       transaction.update(postRef, {
-        'commentCount': FieldValue.increment(-1),
+        'commentCount': FieldValue.increment(-totalDeleted),
       });
     });
   }
