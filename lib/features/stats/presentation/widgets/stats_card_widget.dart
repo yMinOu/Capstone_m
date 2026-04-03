@@ -16,6 +16,7 @@ class StatsCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 118,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -26,6 +27,7 @@ class StatsCardWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
@@ -35,7 +37,6 @@ class StatsCardWidget extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-          const Spacer(),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
