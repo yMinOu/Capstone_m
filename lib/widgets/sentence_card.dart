@@ -9,12 +9,14 @@ class SentenceCard extends StatefulWidget {
   final WordModel sentence;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
+  final VoidCallback? onTapVocabularySave;
 
   const SentenceCard({
     super.key,
     required this.sentence,
     this.onPrevious,
     this.onNext,
+    this.onTapVocabularySave,
   });
 
   @override
@@ -72,7 +74,10 @@ class _SentenceCardState extends State<SentenceCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        _IconButton(icon: Icons.menu_book_outlined),
+                        _IconButton(
+                          icon: Icons.menu_book_outlined,
+                          onTap: widget.onTapVocabularySave,
+                        ),
                         const SizedBox(width: 8),
                         // TODO [기능 추가 시]: TTS 재생
                         _IconButton(icon: Icons.volume_up_outlined),
@@ -238,18 +243,30 @@ class _NavButton extends StatelessWidget {
 
 class _IconButton extends StatelessWidget {
   final IconData icon;
+  final VoidCallback? onTap;
 
-  const _IconButton({required this.icon});
+  const _IconButton({
+    required this.icon,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.grey.shade300),
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Icon(icon, size: 18, color: Colors.grey.shade600),
+        ),
       ),
-      child: Icon(icon, size: 18, color: Colors.grey.shade600),
     );
   }
 }

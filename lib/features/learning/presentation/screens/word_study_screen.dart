@@ -14,7 +14,8 @@ import 'package:nihongo/features/learning/presentation/providers/learning_provid
 import 'package:nihongo/features/stats/data/models/stats_model.dart';
 import 'package:nihongo/features/stats/presentation/providers/stats_providers.dart';
 import 'package:nihongo/widgets/word_card.dart';
-
+import 'package:nihongo/features/vocabulary/data/models/learning_content_model.dart';
+import 'package:nihongo/features/vocabulary/presentation/widgets/vocabulary_select_bottom_sheet.dart';
 class WordStudyScreen extends ConsumerStatefulWidget {
   final String categoryId;
   final String categoryTitle;
@@ -497,6 +498,42 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
                   WordCard(
                     word: word,
                     initialFlipped: _isCardFlipped,
+                    onTapVocabularySave: () {
+                      showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => VocabularySelectBottomSheet(
+                          content: LearningContentModel(
+                            id: word.id,
+                            category: word.category,
+                            subCategory: word.subCategory,
+                            contentType: word.contentType,
+                            content: word.content,
+                            meaning: word.meaning,
+                            sourceId: '',
+                            isActive: true,
+                            createdAt: null,
+                            updatedAt: null,
+                            furigana: word.furigana,
+                            romaji: word.romaji,
+                            onReading: '',
+                            kunReading: '',
+                            pronunciationKr: word.pronunciationKr,
+                            order: null,
+                            examples: word.examples
+                                .map(
+                                  (example) => LearningContentExampleModel(
+                                content: example.content,
+                                furigana: null,
+                                meaning: example.meaning,
+                              ),
+                            )
+                                .toList(),
+                          ),
+                        ),
+                      );
+                    },
                     onUnknown: () async {
                       await _applyAnswer(word: word, newStatus: 'dontKnow');
 

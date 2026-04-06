@@ -11,10 +11,12 @@ import 'package:nihongo/features/stats/presentation/widgets/stats_weak_area_widg
 
 class StatsScreen extends ConsumerWidget {
   final int animationSeed;
+  final bool isActive;
 
   const StatsScreen({
     super.key,
     this.animationSeed = 0,
+    this.isActive = false,
   });
 
   @override
@@ -32,6 +34,7 @@ class StatsScreen extends ConsumerWidget {
             onPeriodChanged: (period) {
               ref.read(statsChartPeriodProvider.notifier).state = period;
             },
+            isActive: isActive,
           ),
           loading: () => const Center(
             child: CircularProgressIndicator(),
@@ -53,12 +56,14 @@ class _StatsContent extends StatelessWidget {
   final int animationSeed;
   final StatsChartPeriod selectedPeriod;
   final ValueChanged<StatsChartPeriod> onPeriodChanged;
+  final bool isActive;
 
   const _StatsContent({
     required this.stats,
     required this.animationSeed,
     required this.selectedPeriod,
     required this.onPeriodChanged,
+    required this.isActive,
   });
 
   @override
@@ -72,6 +77,7 @@ class _StatsContent extends StatelessWidget {
           StatsTopVideoSection(
             todayLearnedCount: stats.learnedCount,
             totalStudyCount: stats.totalStudyCount,
+            isActive: isActive,
           ),
           const SizedBox(height: 16),
           Padding(
@@ -132,11 +138,13 @@ class _StatsContent extends StatelessWidget {
 class StatsTopVideoSection extends StatefulWidget {
   final int todayLearnedCount;
   final int totalStudyCount;
+  final bool isActive;
 
   const StatsTopVideoSection({
     super.key,
     required this.todayLearnedCount,
     required this.totalStudyCount,
+    required this.isActive,
   });
 
   @override
@@ -161,24 +169,46 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
     _initializeVideo();
   }
 
+  @override
+  void didUpdateWidget(covariant StatsTopVideoSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (!_isInitialized) return;
+
+    if (oldWidget.isActive != widget.isActive) {
+      _syncPlayback();
+    }
+  }
+
   Future<void> _initializeVideo() async {
     try {
       await _controller.initialize();
       await _controller.setLooping(true);
       await _controller.setVolume(0);
-      await _controller.play();
 
       if (!mounted) return;
 
       setState(() {
         _isInitialized = true;
       });
+
+      _syncPlayback();
     } catch (e) {
       if (!mounted) return;
 
       setState(() {
         _errorMessage = e.toString();
       });
+    }
+  }
+
+  void _syncPlayback() {
+    if (!_controller.value.isInitialized) return;
+
+    if (widget.isActive) {
+      _controller.play();
+    } else {
+      _controller.pause();
     }
   }
 
@@ -206,6 +236,7 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
 
   @override
   void dispose() {
+    _controller.pause();
     _controller.dispose();
     super.dispose();
   }
@@ -226,16 +257,15 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFFFF3F6), // 핑크
-                  Color(0xFFDFDFDF), // 연회색
-                  Color(0xFFEAEAEA), // 회색
-                  Color(0xFFFFFFFF), // 흰색
+                  Color(0xFFFFF3F6),
+                  Color(0xFFDFDFDF),
+                  Color(0xFFEAEAEA),
+                  Color(0xFFFFFFFF),
                 ],
                 stops: [0.3, 0.6, 0.85, 1.0],
               ),
             ),
           ),
-
           if (_isInitialized)
             Positioned.fill(
               child: ShaderMask(
@@ -272,7 +302,6 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
                 color: Color(0xFFFFF3F6),
               ),
             ),
-
           IgnorePointer(
             child: Stack(
               fit: StackFit.expand,
@@ -316,7 +345,6 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
               ],
             ),
           ),
-
           Positioned(
             left: 16,
             top: 18,
@@ -324,7 +352,7 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   '오늘 학습한 카드',
                   style: TextStyle(
                     color: Colors.black,
@@ -338,7 +366,7 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
                   children: [
                     Text(
                       '${widget.todayLearnedCount}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.black,
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
@@ -346,8 +374,8 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 4),
                       child: Text(
                         '개',
                         style: TextStyle(
@@ -362,7 +390,6 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
               ],
             ),
           ),
-
           Positioned(
             left: 16,
             right: 16,
@@ -385,12 +412,10 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
               ],
             ),
           ),
-
           if (!_isInitialized && _errorMessage == null)
             const Center(
               child: CircularProgressIndicator(),
             ),
-
           if (_errorMessage != null)
             Center(
               child: Padding(

@@ -13,6 +13,7 @@ class WordCard extends StatefulWidget {
   final VoidCallback? onKnown;    // 알아요  (없으면 버튼 숨김)
   final VoidCallback? onPrevious; // 이전    (없으면 버튼 숨김)
   final bool initialFlipped;      // 처음부터 뒷면으로 시작할지
+  final VoidCallback? onTapVocabularySave;
 
   const WordCard({
     super.key,
@@ -21,6 +22,7 @@ class WordCard extends StatefulWidget {
     this.onKnown,
     this.onPrevious,
     this.initialFlipped = false,
+    this.onTapVocabularySave,
   });
 
   @override
@@ -177,10 +179,13 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 책 아이콘 + 발음 버튼
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _CardIconButton(icon: Icons.menu_book_outlined),
+              _CardIconButton(
+                icon: Icons.menu_book_outlined,
+                onTap: widget.onTapVocabularySave,
+              ),
               SizedBox(width: 8),
               // TODO [기능 추가 시]: 발음 버튼 누르면 TTS 재생
               _CardIconButton(icon: Icons.volume_up_outlined),
@@ -450,18 +455,30 @@ class _InfoRow extends StatelessWidget {
 
 class _CardIconButton extends StatelessWidget {
   final IconData icon;
+  final VoidCallback? onTap;
 
-  const _CardIconButton({required this.icon});
+  const _CardIconButton({
+    required this.icon,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.grey.shade300),
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Icon(icon, size: 18, color: Colors.grey.shade600),
+        ),
       ),
-      child: Icon(icon, size: 18, color: Colors.grey.shade600),
     );
   }
 }
