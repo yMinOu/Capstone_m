@@ -1,4 +1,4 @@
-/// 내 단어 탭 리스트 아이템
+/// 학습한 단어 탭 리스트 아이템
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/vocabulary/data/models/learning_progress_model.dart';
 
@@ -34,17 +34,24 @@ class WordListItemWidget extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Text(
-                      word.content,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                    Flexible(
+                      child: Text(
+                        word.content,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+
+                    const SizedBox(width: 8),
+
                     Expanded(
                       child: Text(
-                        '${word.meaning}',
+                        word.meaning.toString(),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 16,
@@ -56,9 +63,11 @@ class WordListItemWidget extends StatelessWidget {
                   ],
                 ),
               ),
+
+              const SizedBox(width: 10),
+
               Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE7F5FF),
                   borderRadius: BorderRadius.circular(999),
@@ -73,7 +82,7 @@ class WordListItemWidget extends StatelessWidget {
                 ),
               ),
             ],
-          ),
+          )
         ),
       ),
     );

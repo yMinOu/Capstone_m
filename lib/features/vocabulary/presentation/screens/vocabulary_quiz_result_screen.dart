@@ -32,81 +32,89 @@ class VocabularyQuizResultScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Spacer(),
-              Text(
-                '$totalCount문제 중 $correctCount개를 맞췄어요!',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$totalCount문제 중 $correctCount개를 맞췄어요!',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      if (wrongWords.isNotEmpty) ...[
+                        const SizedBox(height: 28),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '틀린 단어 ${wrongWords.length}개',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          constraints: const BoxConstraints(maxHeight: 260),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE1E1E1)),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            itemCount: wrongWords.length,
+                            separatorBuilder: (_, __) => const Divider(
+                              height: 1,
+                              color: Color(0xFFEAEAEA),
+                            ),
+                            itemBuilder: (context, index) {
+                              final word = wrongWords[index];
+                              final meaningText = word.meaning.isEmpty
+                                  ? ''
+                                  : word.meaning.join(', ');
+
+                              return ListTile(
+                                dense: true,
+                                title: Text(
+                                  word.content,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                subtitle: meaningText.isEmpty
+                                    ? null
+                                    : Text(
+                                  meaningText,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF4F6B8A),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 28),
-              if (wrongWords.isNotEmpty) ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '틀린 단어 ${wrongWords.length}개',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(maxHeight: 260),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE1E1E1)),
-                  ),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    itemCount: wrongWords.length,
-                    separatorBuilder: (_, __) => const Divider(
-                      height: 1,
-                      color: Color(0xFFEAEAEA),
-                    ),
-                    itemBuilder: (context, index) {
-                      final word = wrongWords[index];
-                      final meaningText = word.meaning.isEmpty
-                          ? ''
-                          : word.meaning.join(', ');
-
-                      return ListTile(
-                        dense: true,
-                        title: Text(
-                          word.content,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        subtitle: meaningText.isEmpty
-                            ? null
-                            : Text(
-                          meaningText,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF4F6B8A),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
+              const SizedBox(height: 24),
               SizedBox(
-                width: 224,
+                width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst == false);
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
@@ -119,17 +127,15 @@ class VocabularyQuizResultScreen extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: Text(
+                  child: const Text(
                     '단어장으로 이동',
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
-              const Spacer(),
             ],
           ),
         ),

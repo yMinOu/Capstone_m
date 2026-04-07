@@ -6,6 +6,18 @@ import 'package:nihongo/features/vocabulary/data/models/learning_progress_model.
 import 'package:nihongo/features/vocabulary/data/models/word_model.dart';
 import 'package:nihongo/features/vocabulary/data/models/learning_content_model.dart';
 
+class LearningProgressPage {
+  const LearningProgressPage({
+    required this.items,
+    required this.lastDocument,
+    required this.hasMore,
+  });
+
+  final List<LearningProgressModel> items;
+  final DocumentSnapshot<Map<String, dynamic>>? lastDocument;
+  final bool hasMore;
+}
+
 class VocabularyRepository {
   VocabularyRepository({
     required FirebaseFirestore firestore,
@@ -74,45 +86,6 @@ class VocabularyRepository {
     await batch.commit();
   }
 
-  Future<void> addWord({
-    required String vocabularyId,
-    required Map<String, dynamic> wordData,
-  }) async {
-    final vocabularyDoc = _vocabulariesRef.doc(vocabularyId);
-    final wordDoc = vocabularyDoc.collection('words').doc();
-    final now = Timestamp.fromDate(DateTime.now());
-
-    await _firestore.runTransaction((transaction) async {
-      transaction.set(wordDoc, {
-        ...wordData,
-        'createdAt': now,
-        'updatedAt': now,
-      });
-
-      transaction.update(vocabularyDoc, {
-        'wordCount': FieldValue.increment(1),
-        'updatedAt': now,
-      });
-    });
-  }
-
-  Future<void> deleteWord({
-    required String vocabularyId,
-    required String wordId,
-  }) async {
-    final vocabularyDoc = _vocabulariesRef.doc(vocabularyId);
-    final wordDoc = vocabularyDoc.collection('words').doc(wordId);
-    final now = Timestamp.fromDate(DateTime.now());
-
-    await _firestore.runTransaction((transaction) async {
-      transaction.delete(wordDoc);
-      transaction.update(vocabularyDoc, {
-        'wordCount': FieldValue.increment(-1),
-        'updatedAt': now,
-      });
-    });
-  }
-
   String? _normalizeDescription(String? description) {
     if (description == null) {
       return null;
@@ -141,25 +114,21 @@ class VocabularyRepository {
     );
   }
 
-  Future<void> createWord({
+  Future<void> deleteWord({
     required String vocabularyId,
-    required String word,
-    required String meaning,
+    required String wordId,
   }) async {
-    final trimmedWord = word.trim();
-    final trimmedMeaning = meaning.trim();
+    final vocabularyDoc = _vocabulariesRef.doc(vocabularyId);
+    final wordDoc = vocabularyDoc.collection('words').doc(wordId);
+    final now = Timestamp.fromDate(DateTime.now());
 
-    if (trimmedWord.isEmpty || trimmedMeaning.isEmpty) {
-      throw Exception('단어와 의미를 모두 입력해주세요.');
-    }
-
-    await addWord(
-      vocabularyId: vocabularyId,
-      wordData: {
-        'word': trimmedWord,
-        'meaning': trimmedMeaning,
-      },
-    );
+    await _firestore.runTransaction((transaction) async {
+      transaction.delete(wordDoc);
+      transaction.update(vocabularyDoc, {
+        'wordCount': FieldValue.increment(-1),
+        'updatedAt': now,
+      });
+    });
   }
 
   CollectionReference<Map<String, dynamic>> get _learningProgressRef {
@@ -169,15 +138,43 @@ class VocabularyRepository {
         .collection('learning_progress');
   }
 
-  Stream<List<LearningProgressModel>> watchLearningProgressWords() {
-    return _learningProgressRef
+  Future<LearningProgressPage> fetchLearningProgressWordsPage({
+    DocumentSnapshot<Map<String, dynamic>>? lastDocument,
+    int limit = 20,
+  }) async {
+    Query<Map<String, dynamic>> query = _learningProgressRef
         .orderBy('updatedAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .limit(limit);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    final snapshot = await query.get();
+
+    return LearningProgressPage(
+      items: snapshot.docs
           .map(LearningProgressModel.fromFirestore)
           .toList(),
+      lastDocument: snapshot.docs.isEmpty ? lastDocument : snapshot.docs.last,
+      hasMore: snapshot.docs.length == limit,
     );
+  }
+
+  Future<List<LearningProgressModel>> fetchNewerLearningProgressWords({
+    required DateTime newestUpdatedAt,
+  }) async {
+    final snapshot = await _learningProgressRef
+        .where(
+      'updatedAt',
+      isGreaterThan: Timestamp.fromDate(newestUpdatedAt),
+    )
+        .orderBy('updatedAt', descending: true)
+        .get();
+
+    return snapshot.docs
+        .map(LearningProgressModel.fromFirestore)
+        .toList();
   }
 
   CollectionReference<Map<String, dynamic>> get _learningContentsRef {
@@ -198,7 +195,7 @@ class VocabularyRepository {
 
   Future<void> updateLearningStatus({
     required String contentId,
-    required String status, // "know" | "dontKnow"
+    required String status,
   }) async {
     final doc = _learningProgressRef.doc(contentId);
 

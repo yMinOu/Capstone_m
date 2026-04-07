@@ -36,20 +36,18 @@ android {
     }
 
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
-            create("dev") {
-                storeFile = file(keystoreProperties["devStoreFile"] as String)
-                storePassword = keystoreProperties["devStorePassword"] as String
-                keyAlias = keystoreProperties["devKeyAlias"] as String
-                keyPassword = keystoreProperties["devKeyPassword"] as String
-            }
+        create("dev") {
+            storeFile = file(keystoreProperties["devStoreFile"] as String)
+            storePassword = keystoreProperties["devStorePassword"] as String
+            keyAlias = keystoreProperties["devKeyAlias"] as String
+            keyPassword = keystoreProperties["devKeyPassword"] as String
+        }
 
-            create("prod") {
-                storeFile = file(keystoreProperties["prodStoreFile"] as String)
-                storePassword = keystoreProperties["prodStorePassword"] as String
-                keyAlias = keystoreProperties["prodKeyAlias"] as String
-                keyPassword = keystoreProperties["prodKeyPassword"] as String
-            }
+        create("prod") {
+            storeFile = file(keystoreProperties["prodStoreFile"] as String)
+            storePassword = keystoreProperties["prodStorePassword"] as String
+            keyAlias = keystoreProperties["prodKeyAlias"] as String
+            keyPassword = keystoreProperties["prodKeyPassword"] as String
         }
     }
 
@@ -58,22 +56,18 @@ android {
     productFlavors {
         create("dev") {
             dimension = "env"
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("dev")
-            }
+            signingConfig = signingConfigs.getByName("dev")
         }
 
         create("prod") {
             dimension = "env"
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("prod")
-            }
+            signingConfig = signingConfigs.getByName("prod")
         }
     }
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = null
         }
 
         release {

@@ -22,11 +22,46 @@ class VocabularyScreen extends ConsumerStatefulWidget {
 class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
   bool _isVocabularyTab = true;
   WordFilterState _filterState = const WordFilterState();
+  late final ScrollController _wordScrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _wordScrollController = ScrollController()..addListener(_onWordScroll);
+  }
+
+  @override
+  void dispose() {
+    _wordScrollController
+      ..removeListener(_onWordScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onWordScroll() {
+    if (_isVocabularyTab || !_wordScrollController.hasClients) {
+      return;
+    }
+
+    final position = _wordScrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 250) {
+      ref.read(learningProgressPagingProvider.notifier).loadMore();
+    }
+  }
+
+  void _openLearningProgressTab() {
+    setState(() {
+      _isVocabularyTab = false;
+    });
+
+    Future.microtask(() {
+      ref.read(learningProgressPagingProvider.notifier).refreshOnTabOpen();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final vocabularyListAsync = ref.watch(vocabularyListProvider);
-    final learningProgressAsync = ref.watch(learningProgressListProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -47,7 +82,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
                   _TopTabButton(
                     title: '학습한 단어',
                     isSelected: !_isVocabularyTab,
-                    onTap: () => setState(() => _isVocabularyTab = false),
+                    onTap: _openLearningProgressTab,
                   ),
                 ],
               ),
@@ -58,102 +93,126 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
                 data: (list) => list.isEmpty
                     ? const _VocabularyEmptyView()
                     : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                  padding:
+                  const EdgeInsets.fromLTRB(20, 18, 20, 20),
                   itemCount: list.length,
                   separatorBuilder: (_, __) =>
                   const SizedBox(height: 14),
-                  itemBuilder: (context, index) => VocabularyCardWidget(
-                    vocabulary: list[index],
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => VocabularyDetailScreen(
-                          vocabulary: list[index],
+                  itemBuilder: (context, index) =>
+                      VocabularyCardWidget(
+                        vocabulary: list[index],
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => VocabularyDetailScreen(
+                              vocabulary: list[index],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    onDelete: () async {
-                      final shouldDelete = await showDialog<bool>(
-                        context: context,
-                        builder: (dialogContext) {
-                          return AlertDialog(
-                            backgroundColor: Colors.white,
-                            surfaceTintColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            title: const Text(
-                              '단어장 삭제',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
-                              ),
-                            ),
-                            content: const Text(
-                              '단어장을 지우겠습니까?',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF555555),
-                              ),
-                            ),
-                            actions: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () => Navigator.pop(dialogContext, false),
-                                      style: OutlinedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        side: const BorderSide(color: Color(0xFFD9D9D9)),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                      child: const Text('취소'),
-                                    ),
+                        onDelete: () async {
+                          final shouldDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (dialogContext) {
+                              return AlertDialog(
+                                backgroundColor: Colors.white,
+                                surfaceTintColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(20),
+                                ),
+                                title: const Text(
+                                  '단어장 삭제',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
                                   ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: () => Navigator.pop(dialogContext, true),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.black,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                ),
+                                content: const Text(
+                                  '단어장을 지우겠습니까?',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF555555),
+                                  ),
+                                ),
+                                actions: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(
+                                                dialogContext,
+                                                false,
+                                              ),
+                                          style: OutlinedButton
+                                              .styleFrom(
+                                            backgroundColor:
+                                            Colors.white,
+                                            side: const BorderSide(
+                                              color: Color(0xFFD9D9D9),
+                                            ),
+                                            shape:
+                                            RoundedRectangleBorder(
+                                              borderRadius:
+                                              BorderRadius.circular(
+                                                12,
+                                              ),
+                                            ),
+                                          ),
+                                          child: const Text('취소'),
                                         ),
                                       ),
-                                      child: const Text('삭제'),
-                                    ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(
+                                                dialogContext,
+                                                true,
+                                              ),
+                                          style: ElevatedButton
+                                              .styleFrom(
+                                            backgroundColor:
+                                            Colors.black,
+                                            foregroundColor:
+                                            Colors.white,
+                                            shape:
+                                            RoundedRectangleBorder(
+                                              borderRadius:
+                                              BorderRadius.circular(
+                                                12,
+                                              ),
+                                            ),
+                                          ),
+                                          child: const Text('삭제'),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),
-                            ],
+                              );
+                            },
                           );
-                        },
-                      );
 
-                      if (shouldDelete == true) {
-                        ref.read(vocabularyActionProvider.notifier).deleteVocabulary(
-                          vocabularyId: list[index].id,
-                        );
-                      }
-                    },
-                  ),
+                          if (shouldDelete == true) {
+                            ref
+                                .read(
+                              vocabularyActionProvider.notifier,
+                            )
+                                .deleteVocabulary(
+                              vocabularyId: list[index].id,
+                            );
+                          }
+                        },
+                      ),
                 ),
                 loading: () =>
                 const Center(child: CircularProgressIndicator()),
                 error: (err, _) =>
                     Center(child: Text('에러가 발생했습니다: $err')),
               )
-                  : learningProgressAsync.when(
-                data: (words) => _buildWordTab(words),
-                loading: () =>
-                const Center(child: CircularProgressIndicator()),
-                error: (err, _) =>
-                    Center(child: Text('에러가 발생했습니다: $err')),
-              ),
+                  : _buildLearningProgressTab(),
             ),
           ],
         ),
@@ -195,9 +254,17 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
     );
   }
 
-  Widget _buildWordTab(List<LearningProgressModel> words) {
+  Widget _buildLearningProgressTab() {
+    final pagingState = ref.watch(learningProgressPagingProvider);
+
+    if (!pagingState.initialized || pagingState.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     final filteredWords = applyWordFilters(
-      words: words,
+      words: pagingState.items,
       filterState: _filterState,
     );
 
@@ -211,27 +278,53 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
           onClearAll: _resetFilters,
         ),
         Expanded(
-          child: filteredWords.isEmpty
-              ? const Center(
-            child: Text('조건에 맞는 단어가 없습니다.'),
-          )
-              : ListView.builder(
-            padding: EdgeInsets.zero,
-            itemCount: filteredWords.length,
-            itemBuilder: (context, index) {
-              final word = filteredWords[index];
-              return WordListItemWidget(
-                word: word,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MyWordDetailScreen(
-                      progress: word,
+          child: RefreshIndicator(
+            onRefresh: () {
+              return ref
+                  .read(learningProgressPagingProvider.notifier)
+                  .refreshOnlyNew();
+            },
+            child: filteredWords.isEmpty
+                ? ListView(
+              controller: _wordScrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 120),
+                Center(
+                  child: Text('조건에 맞는 단어가 없습니다.'),
+                ),
+              ],
+            )
+                : ListView.builder(
+              controller: _wordScrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount:
+              filteredWords.length + (pagingState.isLoadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index >= filteredWords.length) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                final word = filteredWords[index];
+                return WordListItemWidget(
+                  word: word,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MyWordDetailScreen(
+                        progress: word,
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ],
