@@ -45,6 +45,32 @@ class LearningProgressModel {
     );
   }
 
+  LearningProgressModel copyWith({
+    String? id,
+    String? category,
+    String? subCategory,
+    String? contentType,
+    String? content,
+    String? meaning,
+    String? status,
+    DateTime? lastStudiedAt,
+    DateTime? addedToWordbookAt,
+    DateTime? updatedAt,
+  }) {
+    return LearningProgressModel(
+      id: id ?? this.id,
+      category: category ?? this.category,
+      subCategory: subCategory ?? this.subCategory,
+      contentType: contentType ?? this.contentType,
+      content: content ?? this.content,
+      meaning: meaning ?? this.meaning,
+      status: status ?? this.status,
+      lastStudiedAt: lastStudiedAt ?? this.lastStudiedAt,
+      addedToWordbookAt: addedToWordbookAt ?? this.addedToWordbookAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   static DateTime? _toNullableDateTime(dynamic value) {
     if (value == null) {
       return null;
