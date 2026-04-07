@@ -10,7 +10,13 @@ class AuthRepository {
     GoogleSignIn? googleSignIn,
     FirebaseFirestore? firestore,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _googleSignIn = googleSignIn ??
+            GoogleSignIn(
+              serverClientId:
+              const String.fromEnvironment('ENV', defaultValue: 'dev') == 'prod'
+                  ? '69037549587-sjguc0da118i6js3qpgrvbfujlr44ku8.apps.googleusercontent.com'
+                  : '113939685128-lnjcg4abdauhmr0kr3kefahvfq5fi0fj.apps.googleusercontent.com',
+            ),
         _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseAuth _firebaseAuth;
@@ -68,36 +74,12 @@ class AuthRepository {
       'lastStudyDateKey': data['lastStudyDateKey'],
       'updatedAt': FieldValue.serverTimestamp(),
       'weakStats': data['weakStats'] ?? {
-        '단어': {
-          'know': 0,
-          'dontKnow': 0,
-          'score': 30,
-        },
-        '한자': {
-          'know': 0,
-          'dontKnow': 0,
-          'score': 30,
-        },
-        '예문': {
-          'know': 0,
-          'dontKnow': 0,
-          'score': 30,
-        },
-        '가타카나': {
-          'know': 0,
-          'dontKnow': 0,
-          'score': 30,
-        },
-        '히라가나': {
-          'know': 0,
-          'dontKnow': 0,
-          'score': 30,
-        },
-        '스피킹': {
-          'know': 0,
-          'dontKnow': 0,
-          'score': 30,
-        },
+        '단어': {'know': 0, 'dontKnow': 0, 'score': 30},
+        '한자': {'know': 0, 'dontKnow': 0, 'score': 30},
+        '예문': {'know': 0, 'dontKnow': 0, 'score': 30},
+        '가타카나': {'know': 0, 'dontKnow': 0, 'score': 30},
+        '히라가나': {'know': 0, 'dontKnow': 0, 'score': 30},
+        '스피킹': {'know': 0, 'dontKnow': 0, 'score': 30},
       },
     }, SetOptions(merge: true));
   }
