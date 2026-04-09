@@ -26,128 +26,138 @@ class SentenceStudyScreen extends ConsumerStatefulWidget {
 class _SentenceStudyScreenState extends ConsumerState<SentenceStudyScreen> {
   int _currentIndex = 0;
 
+  void _maybeLoadMore(int currentIndex, int totalLoaded) {
+    if (currentIndex >= totalLoaded - 10) {
+      ref.read(paginatedSentenceProvider(widget.categoryId).notifier).loadMore();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final asyncSentences = ref.watch(sentenceListProvider(widget.categoryId));
+    final pageState = ref.watch(paginatedSentenceProvider(widget.categoryId));
+
+    Widget body;
+
+    if (pageState.isInitialLoading) {
+      body = Column(
+        children: [
+          _TopBar(title: widget.categoryTitle),
+          const Expanded(child: Center(child: CircularProgressIndicator())),
+        ],
+      );
+    } else if (pageState.error != null && pageState.words.isEmpty) {
+      body = Column(
+        children: [
+          _TopBar(title: widget.categoryTitle),
+          Expanded(
+            child: Center(
+              child: Text(
+                '예문을 불러오지 못했어요\n${pageState.error}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (pageState.words.isEmpty) {
+      body = Column(
+        children: [
+          _TopBar(title: widget.categoryTitle),
+          const Expanded(
+            child: Center(
+              child: Text('예문이 없습니다', style: TextStyle(color: Colors.grey)),
+            ),
+          ),
+        ],
+      );
+    } else {
+      final sentences = pageState.words;
+      final safeIndex = _currentIndex.clamp(0, sentences.length - 1);
+      final sentence = sentences[safeIndex];
+
+      _maybeLoadMore(safeIndex, sentences.length);
+
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TopBar(title: widget.categoryTitle),
+          const SizedBox(height: 16),
+          Center(
+            child: Text(
+              '${safeIndex + 1} / ${sentences.length}${pageState.hasMore ? '+' : ''}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SentenceCard(
+            sentence: sentence,
+            onTapVocabularySave: () {
+              showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => VocabularySelectBottomSheet(
+                  content: LearningContentModel(
+                    id: sentence.id,
+                    category: sentence.category,
+                    subCategory: sentence.subCategory,
+                    contentType: sentence.contentType,
+                    content: sentence.content,
+                    meaning: sentence.meaning,
+                    sourceId: '',
+                    isActive: true,
+                    createdAt: null,
+                    updatedAt: null,
+                    furigana: sentence.furigana,
+                    romaji: sentence.romaji,
+                    onReading: '',
+                    kunReading: '',
+                    pronunciationKr: sentence.pronunciationKr,
+                    order: null,
+                    examples: sentence.examples
+                        .map(
+                          (example) => LearningContentExampleModel(
+                            content: example.content,
+                            furigana: null,
+                            meaning: example.meaning,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              );
+            },
+            onPrevious: safeIndex > 0
+                ? () => setState(() => _currentIndex = safeIndex - 1)
+                : null,
+            onNext: safeIndex < sentences.length - 1
+                ? () => setState(() => _currentIndex = safeIndex + 1)
+                : null,
+          ),
+          if (pageState.isLoadingMore)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          const SizedBox(height: 24),
+        ],
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: asyncSentences.when(
-          loading: () => Column(
-            children: [
-              _TopBar(title: widget.categoryTitle),
-              const Expanded(child: Center(child: CircularProgressIndicator())),
-            ],
-          ),
-          error: (e, _) => Column(
-            children: [
-              _TopBar(title: widget.categoryTitle),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    '예문을 불러오지 못했어요\n$e',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          data: (sentences) {
-            if (sentences.isEmpty) {
-              return Column(
-                children: [
-                  _TopBar(title: widget.categoryTitle),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        '예문이 없습니다',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            final safeIndex = _currentIndex.clamp(0, sentences.length - 1);
-            final sentence = sentences[safeIndex];
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _TopBar(title: widget.categoryTitle),
-
-                const SizedBox(height: 16),
-
-                // 진행도 표시
-                Center(
-                  child: Text(
-                    '${safeIndex + 1} / ${sentences.length}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 예문 카드 (버튼 포함)
-                SentenceCard(
-                  sentence: sentence,
-                  onTapVocabularySave: () {
-                    showModalBottomSheet<void>(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => VocabularySelectBottomSheet(
-                        content: LearningContentModel(
-                          id: sentence.id,
-                          category: sentence.category,
-                          subCategory: sentence.subCategory,
-                          contentType: sentence.contentType,
-                          content: sentence.content,
-                          meaning: sentence.meaning,
-                          sourceId: '',
-                          isActive: true,
-                          createdAt: null,
-                          updatedAt: null,
-                          furigana: sentence.furigana,
-                          romaji: sentence.romaji,
-                          onReading: '',
-                          kunReading: '',
-                          pronunciationKr: sentence.pronunciationKr,
-                          order: null,
-                          examples: sentence.examples
-                              .map(
-                                (example) => LearningContentExampleModel(
-                              content: example.content,
-                              furigana: null,
-                              meaning: example.meaning,
-                            ),
-                          )
-                              .toList(),
-                        ),
-                      ),
-                    );
-                  },
-                  onPrevious: safeIndex > 0
-                      ? () => setState(() => _currentIndex = safeIndex - 1)
-                      : null,
-                  onNext: safeIndex < sentences.length - 1
-                      ? () => setState(() => _currentIndex = safeIndex + 1)
-                      : null,
-                ),
-
-                const SizedBox(height: 24),
-              ],
-            );
-          },
-        ),
-      ),
+      body: SafeArea(child: body),
     );
   }
 }
@@ -179,4 +189,3 @@ class _TopBar extends StatelessWidget {
     );
   }
 }
-
