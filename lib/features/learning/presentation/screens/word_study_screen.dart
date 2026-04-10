@@ -412,166 +412,177 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
     return null;
   }
 
+  void _maybeLoadMore(int currentIndex, int totalLoaded) {
+    if (currentIndex >= totalLoaded - 10) {
+      ref.read(paginatedWordProvider(widget.categoryId).notifier).loadMore();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final asyncWords = ref.watch(wordListProvider(widget.categoryId));
+    final pageState = ref.watch(paginatedWordProvider(widget.categoryId));
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: asyncWords.when(
-          loading: () => Column(
-            children: [
-              _TopBar(
-                title: widget.categoryTitle,
-                onReset: _resetProgress,
-                onBack: _saveStudySessionIfNeeded,
-              ),
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ],
+    Widget body;
+
+    if (pageState.isInitialLoading) {
+      body = Column(
+        children: [
+          _TopBar(
+            title: widget.categoryTitle,
+            onReset: _resetProgress,
+            onBack: _saveStudySessionIfNeeded,
           ),
-          error: (e, _) => Column(
-            children: [
-              _TopBar(
-                title: widget.categoryTitle,
-                onReset: _resetProgress,
-                onBack: _saveStudySessionIfNeeded,
+          const Expanded(child: Center(child: CircularProgressIndicator())),
+        ],
+      );
+    } else if (pageState.error != null && pageState.words.isEmpty) {
+      body = Column(
+        children: [
+          _TopBar(
+            title: widget.categoryTitle,
+            onReset: _resetProgress,
+            onBack: _saveStudySessionIfNeeded,
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                '단어를 불러오지 못했어요\n${pageState.error}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
               ),
-              Expanded(
+            ),
+          ),
+        ],
+      );
+    } else if (pageState.words.isEmpty) {
+      body = Column(
+        children: [
+          _TopBar(
+            title: widget.categoryTitle,
+            onReset: _resetProgress,
+            onBack: _saveStudySessionIfNeeded,
+          ),
+          const Expanded(
+            child: Center(
+              child: Text('단어가 없습니다', style: TextStyle(color: Colors.grey)),
+            ),
+          ),
+        ],
+      );
+    } else {
+      final words = pageState.words;
+      final safeIndex = _currentIndex.clamp(0, words.length - 1);
+      final word = words[safeIndex];
+
+      _maybeLoadMore(safeIndex, words.length);
+
+      body = SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _TopBar(
+              title: widget.categoryTitle,
+              onReset: _resetProgress,
+              onBack: _saveStudySessionIfNeeded,
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: _StatsBadgeRow(
+                learnedCount: _learnedCount,
+                knownCount: _knownCount,
+                unknownCount: _unknownCount,
+                unseenCount:
+                    (words.length - _knownCount - _unknownCount)
+                        .clamp(0, words.length),
+              ),
+            ),
+            const SizedBox(height: 40),
+            WordCard(
+              word: word,
+              initialFlipped: _isCardFlipped,
+              onTapVocabularySave: () {
+                showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => VocabularySelectBottomSheet(
+                    content: LearningContentModel(
+                      id: word.id,
+                      category: word.category,
+                      subCategory: word.subCategory,
+                      contentType: word.contentType,
+                      content: word.content,
+                      meaning: word.meaning,
+                      sourceId: '',
+                      isActive: true,
+                      createdAt: null,
+                      updatedAt: null,
+                      furigana: word.furigana,
+                      romaji: word.romaji,
+                      onReading: '',
+                      kunReading: '',
+                      pronunciationKr: word.pronunciationKr,
+                      order: null,
+                      examples: word.examples
+                          .map(
+                            (example) => LearningContentExampleModel(
+                          content: example.content,
+                          furigana: null,
+                          meaning: example.meaning,
+                        ),
+                      )
+                          .toList(),
+                    ),
+                  ),
+                );
+              },
+              onUnknown: () async {
+                await _applyAnswer(word: word, newStatus: 'dontKnow');
+                if (!mounted) return;
+                if (safeIndex < words.length - 1) {
+                  setState(() {
+                    _currentIndex = safeIndex + 1;
+                    _isCardFlipped = false;
+                  });
+                }
+              },
+              onKnown: () async {
+                await _applyAnswer(word: word, newStatus: 'know');
+                if (!mounted) return;
+                if (safeIndex < words.length - 1) {
+                  setState(() {
+                    _currentIndex = safeIndex + 1;
+                    _isCardFlipped = false;
+                  });
+                }
+              },
+              onPrevious: safeIndex > 0
+                  ? () => setState(() {
+                        _currentIndex = safeIndex - 1;
+                        _isCardFlipped = true;
+                      })
+                  : null,
+            ),
+            if (pageState.isLoadingMore)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
                 child: Center(
-                  child: Text(
-                    '단어를 불러오지 못했어요\n$e',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.grey),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
               ),
-            ],
-          ),
-          data: (words) {
-            if (words.isEmpty) {
-              return Column(
-                children: [
-                  _TopBar(
-                    title: widget.categoryTitle,
-                    onReset: _resetProgress,
-                    onBack: _saveStudySessionIfNeeded,
-                  ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        '단어가 없습니다',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            final safeIndex = _currentIndex.clamp(0, words.length - 1);
-            final word = words[safeIndex];
-
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _TopBar(
-                    title: widget.categoryTitle,
-                    onReset: _resetProgress,
-                    onBack: _saveStudySessionIfNeeded,
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: _StatsBadgeRow(
-                      learnedCount: _learnedCount,
-                      knownCount: _knownCount,
-                      unknownCount: _unknownCount,
-                      unseenCount:
-                      (words.length - _knownCount - _unknownCount)
-                          .clamp(0, words.length),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  WordCard(
-                    word: word,
-                    initialFlipped: _isCardFlipped,
-                    onTapVocabularySave: () {
-                      showModalBottomSheet<void>(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => VocabularySelectBottomSheet(
-                          content: LearningContentModel(
-                            id: word.id,
-                            category: word.category,
-                            subCategory: word.subCategory,
-                            contentType: word.contentType,
-                            content: word.content,
-                            meaning: word.meaning,
-                            sourceId: '',
-                            isActive: true,
-                            createdAt: null,
-                            updatedAt: null,
-                            furigana: word.furigana,
-                            romaji: word.romaji,
-                            onReading: '',
-                            kunReading: '',
-                            pronunciationKr: word.pronunciationKr,
-                            order: null,
-                            examples: word.examples
-                                .map(
-                                  (example) => LearningContentExampleModel(
-                                content: example.content,
-                                furigana: null,
-                                meaning: example.meaning,
-                              ),
-                            )
-                                .toList(),
-                          ),
-                        ),
-                      );
-                    },
-                    onUnknown: () async {
-                      await _applyAnswer(word: word, newStatus: 'dontKnow');
-
-                      if (!mounted) return;
-
-                      if (safeIndex < words.length - 1) {
-                        setState(() {
-                          _currentIndex = safeIndex + 1;
-                          _isCardFlipped = false;
-                        });
-                      }
-                    },
-                    onKnown: () async {
-                      await _applyAnswer(word: word, newStatus: 'know');
-
-                      if (!mounted) return;
-
-                      if (safeIndex < words.length - 1) {
-                        setState(() {
-                          _currentIndex = safeIndex + 1;
-                          _isCardFlipped = false;
-                        });
-                      }
-                    },
-                    onPrevious: safeIndex > 0
-                        ? () => setState(() {
-                      _currentIndex = safeIndex - 1;
-                      _isCardFlipped = true;
-                    })
-                        : null,
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            );
-          },
+            const SizedBox(height: 24),
+          ],
         ),
-      ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(child: body),
     );
   }
 }
