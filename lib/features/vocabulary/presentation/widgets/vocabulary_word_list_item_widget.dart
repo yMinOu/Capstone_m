@@ -13,10 +13,13 @@ class VocabularyWordListItemWidget extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
+  bool get _isSentence => word.contentType == 'sentence';
+
   @override
   Widget build(BuildContext context) {
     final statusIcon = _buildStatusIcon(word.status);
     final hasSubCategory = word.subCategory.trim().isNotEmpty;
+    final meaningText = _meaningText(word);
 
     return Material(
       color: Colors.white,
@@ -30,26 +33,64 @@ class VocabularyWordListItemWidget extends StatelessWidget {
             ),
           ),
           child: Row(
+            crossAxisAlignment:
+            _isSentence ? CrossAxisAlignment.start : CrossAxisAlignment.center,
             children: [
               statusIcon,
-              const SizedBox(width: 12),
+              //const SizedBox(width: 8),
+
               Expanded(
-                child: Row(
+                child: _isSentence
+                    ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       word.content,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
+                        color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '${_meaningText(word)}',
+                    if (meaningText.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        meaningText,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
+                          color: Color(0xFF4F6B8A),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                )
+                    : Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        word.content,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        meaningText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
                           color: Color(0xFF4F6B8A),
                           fontWeight: FontWeight.w600,
                         ),
@@ -58,14 +99,20 @@ class VocabularyWordListItemWidget extends StatelessWidget {
                   ],
                 ),
               ),
+
               if (hasSubCategory) ...[
+                const SizedBox(width: 8),
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE7F5FF),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0xFF8BD0FF)),
+                    border: Border.all(
+                      color: const Color(0xFF8BD0FF),
+                    ),
                   ),
                   child: Text(
                     word.subCategory,
@@ -75,8 +122,9 @@ class VocabularyWordListItemWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
               ],
+
+              const SizedBox(width: 8),
               InkWell(
                 onTap: onDelete,
                 borderRadius: BorderRadius.circular(20),
