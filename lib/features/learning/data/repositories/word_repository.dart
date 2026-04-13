@@ -36,6 +36,21 @@ class WordRepository {
     );
   }
 
+  // 전체 단어 수 조회
+  Future<int> fetchTotalCount({
+    required String type,
+    required String level,
+  }) async {
+    final snapshot = await _firestore
+        .collection('learning_contents')
+        .where('subCategory', isEqualTo: level)
+        .where('isActive', isEqualTo: true)
+        .where('contentType', isEqualTo: type)
+        .count()
+        .get();
+    return snapshot.count ?? 0;
+  }
+
   // 히라가나 목록 가져오기 (46자로 적어 페이지네이션 불필요)
   Future<List<WordModel>> fetchHiragana() async {
     final snapshot = await _firestore

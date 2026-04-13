@@ -76,7 +76,7 @@ class _SentenceStudyScreenState extends ConsumerState<SentenceStudyScreen> {
       final safeIndex = _currentIndex.clamp(0, sentences.length - 1);
       final sentence = sentences[safeIndex];
 
-      _maybeLoadMore(safeIndex, sentences.length);
+      Future.microtask(() => _maybeLoadMore(safeIndex, sentences.length));
 
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +85,7 @@ class _SentenceStudyScreenState extends ConsumerState<SentenceStudyScreen> {
           const SizedBox(height: 16),
           Center(
             child: Text(
-              '${safeIndex + 1} / ${sentences.length}${pageState.hasMore ? '+' : ''}',
+              '${safeIndex + 1} / ${pageState.totalCount > 0 ? pageState.totalCount : sentences.length}',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade500,

@@ -65,6 +65,7 @@ class PaginatedWordsState {
   final bool isLoadingMore;
   final bool hasMore;
   final String? error;
+  final int totalCount;
 
   const PaginatedWordsState({
     this.words = const [],
@@ -72,6 +73,7 @@ class PaginatedWordsState {
     this.isLoadingMore = false,
     this.hasMore = true,
     this.error,
+    this.totalCount = 0,
   });
 
   PaginatedWordsState copyWith({
@@ -80,6 +82,7 @@ class PaginatedWordsState {
     bool? isLoadingMore,
     bool? hasMore,
     String? error,
+    int? totalCount,
   }) {
     return PaginatedWordsState(
       words: words ?? this.words,
@@ -87,6 +90,7 @@ class PaginatedWordsState {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMore: hasMore ?? this.hasMore,
       error: error ?? this.error,
+      totalCount: totalCount ?? this.totalCount,
     );
   }
 }
@@ -118,17 +122,23 @@ class PaginatedWordsNotifier extends StateNotifier<PaginatedWordsState> {
     if (_isLoading) return;
     _isLoading = true;
     try {
-      final result = await _repository.fetchPaginated(
-        type: _type,
-        level: _level,
-        lastDocument: null,
-        pageSize: _pageSize,
-      );
+      final results = await Future.wait([
+        _repository.fetchPaginated(
+          type: _type,
+          level: _level,
+          lastDocument: null,
+          pageSize: _pageSize,
+        ),
+        _repository.fetchTotalCount(type: _type, level: _level),
+      ]);
+      final result = results[0] as ({List<WordModel> words, DocumentSnapshot? lastDocument});
+      final total = results[1] as int;
       _lastDocument = result.lastDocument;
       state = PaginatedWordsState(
         words: result.words,
         isInitialLoading: false,
         hasMore: result.words.length >= _pageSize,
+        totalCount: total,
       );
     } catch (e) {
       state = PaginatedWordsState(
