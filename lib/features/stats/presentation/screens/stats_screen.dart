@@ -155,6 +155,7 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
   late final VideoPlayerController _controller;
   bool _isInitialized = false;
   String? _errorMessage;
+  bool _showCurrentTotalStudyCountBubble = false;
 
   static const List<int> _milestones = [0, 100, 500, 1000];
 
@@ -177,6 +178,13 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
 
     if (oldWidget.isActive != widget.isActive) {
       _syncPlayback();
+    }
+
+    if (oldWidget.totalStudyCount != widget.totalStudyCount &&
+        _showCurrentTotalStudyCountBubble) {
+      setState(() {
+        _showCurrentTotalStudyCountBubble = false;
+      });
     }
   }
 
@@ -247,7 +255,7 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
 
     return SizedBox(
       width: double.infinity,
-      height: 270,
+      height: 300,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -406,7 +414,17 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
                   ),
                 ),
                 const SizedBox(height: 5),
-                _OverlayProgressBar(progress: progress),
+                _OverlayProgressBar(
+                  progress: progress,
+                  totalStudyCount: widget.totalStudyCount,
+                  showCurrentCountBubble: _showCurrentTotalStudyCountBubble,
+                  onCurrentThumbTap: () {
+                    setState(() {
+                      _showCurrentTotalStudyCountBubble =
+                      !_showCurrentTotalStudyCountBubble;
+                    });
+                  },
+                ),
                 const SizedBox(height: 5),
                 _MilestoneLabels(values: _milestones),
               ],
@@ -491,23 +509,40 @@ class _MilestoneLabels extends StatelessWidget {
 
 class _OverlayProgressBar extends StatelessWidget {
   final double progress;
+  final int totalStudyCount;
+  final bool showCurrentCountBubble;
+  final VoidCallback onCurrentThumbTap;
 
   const _OverlayProgressBar({
     required this.progress,
+    required this.totalStudyCount,
+    required this.showCurrentCountBubble,
+    required this.onCurrentThumbTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    const milestones = [0, 100, 500, 1000];
+    const thumbSize = 12.0;
+    const touchSize = 24.0;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        const thumbSize = 12.0;
         final barWidth = constraints.maxWidth;
-        final thumbLeft = (barWidth - thumbSize) * progress;
+        final clampedProgress = progress.clamp(0.0, 1.0);
+        final thumbLeft = (barWidth - thumbSize) * clampedProgress;
+        final thumbCenter = thumbLeft + (thumbSize / 2);
+
+        final bubbleText = '$totalStudyCount';
+        final bubbleWidth = (bubbleText.length * 8.5 + 20.0).clamp(34.0, 64.0);
+        final bubbleLeft =
+        (thumbCenter - (bubbleWidth / 2)).clamp(0.0, barWidth - bubbleWidth);
 
         return SizedBox(
           height: 15,
           child: Stack(
             alignment: Alignment.centerLeft,
+            clipBehavior: Clip.none,
             children: [
               Container(
                 height: 6,
@@ -516,18 +551,16 @@ class _OverlayProgressBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              FractionallySizedBox(
-                widthFactor: progress,
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF6FA9),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+              Container(
+                width: barWidth * clampedProgress,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6FA9),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              ...List.generate(4, (index) {
-                final ratio = index / 3;
+              ...List.generate(milestones.length, (index) {
+                final ratio = index / (milestones.length - 1);
                 return Positioned(
                   left: (barWidth - thumbSize) * ratio,
                   child: Container(
@@ -545,24 +578,76 @@ class _OverlayProgressBar extends StatelessWidget {
                 );
               }),
               Positioned(
-                left: thumbLeft,
-                child: Container(
-                  width: thumbSize,
-                  height: thumbSize,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFFF6FA9),
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                left: thumbLeft - ((touchSize - thumbSize) / 2),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: onCurrentThumbTap,
+                  child: SizedBox(
+                    width: touchSize,
+                    height: touchSize,
+                    child: Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: thumbSize,
+                            height: thumbSize,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFFF6FA9),
+                                width: 3,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.12),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (showCurrentCountBubble)
+                            Positioned(
+                              top: 16,
+                              left: -(bubbleWidth / 2) + (touchSize / 2),
+                              child: IgnorePointer(
+                                child: Container(
+                                  width: bubbleWidth,
+                                  height: 22,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: const Color(0xFFFF6FA9),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.08),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    bubbleText,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

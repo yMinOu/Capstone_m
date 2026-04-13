@@ -56,10 +56,8 @@ class StatsModel {
       weakAreas: [
         StatsWeakAreaItem(label: '단어', weaknessPercent: 0),
         StatsWeakAreaItem(label: '한자', weaknessPercent: 0),
-        StatsWeakAreaItem(label: '예문', weaknessPercent: 0),
         StatsWeakAreaItem(label: '가타카나', weaknessPercent: 0),
         StatsWeakAreaItem(label: '히라가나', weaknessPercent: 0),
-        StatsWeakAreaItem(label: '스피킹', weaknessPercent: 0),
       ],
       weakAreaMessage: '아직 약한 영역 데이터가 없어요!',
     );

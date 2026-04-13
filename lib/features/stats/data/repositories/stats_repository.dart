@@ -1,6 +1,4 @@
 /// Firestore에서 사용자 통계 데이터를 불러오는 Repository.
-import 'dart:math' as math;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nihongo/features/stats/data/models/stats_model.dart';
@@ -12,6 +10,7 @@ class StatsRepository {
   static const int _defaultWeaknessScore = 30;
   static const int _minWeaknessScore = 10;
   static const int _maxWeaknessScore = 100;
+  static const int _balanceTolerance = 8;
 
   StatsRepository({
     required FirebaseFirestore firestore,
@@ -111,10 +110,8 @@ class StatsRepository {
     return [
       _buildWeakAreaItemFromUser(weakStats, '단어'),
       _buildWeakAreaItemFromUser(weakStats, '한자'),
-      _buildWeakAreaItemFromUser(weakStats, '예문'),
       _buildWeakAreaItemFromUser(weakStats, '가타카나'),
       _buildWeakAreaItemFromUser(weakStats, '히라가나'),
-      _buildWeakAreaItemFromUser(weakStats, '스피킹'),
     ];
   }
 
@@ -123,41 +120,52 @@ class StatsRepository {
       String label,
       ) {
     final target = (weakStats[label] as Map<String, dynamic>?) ?? {};
-
     final score = (target['score'] as num?)?.toInt() ?? _defaultWeaknessScore;
 
     return StatsWeakAreaItem(
       label: label,
-      weaknessPercent: score.clamp(
-        _minWeaknessScore,
-        _maxWeaknessScore,
-      ),
+      weaknessPercent: score.clamp(_minWeaknessScore, _maxWeaknessScore),
     );
   }
 
   String _buildWeakAreaMessage(List<StatsWeakAreaItem> weakAreas) {
     if (weakAreas.isEmpty) {
-      return '학습을 시작하면 약한 영역을 분석해드릴게요!';
+      return '학습을 시작해 주세요!';
     }
 
-    final sorted = [...weakAreas]
-      ..sort((a, b) => a.weaknessPercent.compareTo(b.weaknessPercent));
+    final studiedAreas = weakAreas
+        .where((item) => item.weaknessPercent != _defaultWeaknessScore)
+        .toList();
 
-    final weakest = sorted.first;
+    if (studiedAreas.isEmpty) {
+      return '학습을 시작해 주세요!';
+    }
 
-    final hasStudiedAnyArea = weakAreas.any(
-          (item) => item.weaknessPercent != _defaultWeaknessScore,
+    final allBelowOrEqualDefault = studiedAreas.every(
+          (item) => item.weaknessPercent <= _defaultWeaknessScore,
     );
 
-    if (!hasStudiedAnyArea) {
-      return '학습을 시작하면 약한 영역을 분석해드릴게요!';
+    if (allBelowOrEqualDefault) {
+      return '전체적으로 조금 더 열심히 해보세요!';
     }
 
-    if (weakest.weaknessPercent <= _defaultWeaknessScore) {
+    final average = studiedAreas
+        .map((e) => e.weaknessPercent)
+        .reduce((a, b) => a + b) /
+        studiedAreas.length;
+
+    final lowAreas = studiedAreas
+        .where((item) => item.weaknessPercent < average - _balanceTolerance)
+        .toList();
+
+    if (lowAreas.isEmpty) {
       return '균형 있게 잘 학습하고 있어요!';
     }
 
-    return '${weakest.label} 학습을 더 집중해보세요!';
+    lowAreas.sort((a, b) => a.weaknessPercent.compareTo(b.weaknessPercent));
+    final weakest = lowAreas.first;
+
+    return '${weakest.label} 학습을 조금 더 열심히 해보세요!';
   }
 
   List<StatsChartItem> _buildDailyChart(
