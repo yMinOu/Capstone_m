@@ -33,15 +33,13 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
   bool _hasPlayedVisibleAnimation = false;
   int? _selectedIndex;
 
-  List<StatsWeakAreaItem> get _safeItems => widget.items.length == 6
+  List<StatsWeakAreaItem> get _safeItems => widget.items.length == 4
       ? widget.items
       : const [
     StatsWeakAreaItem(label: '단어', weaknessPercent: 30),
     StatsWeakAreaItem(label: '한자', weaknessPercent: 30),
-    StatsWeakAreaItem(label: '예문', weaknessPercent: 30),
     StatsWeakAreaItem(label: '가타카나', weaknessPercent: 30),
     StatsWeakAreaItem(label: '히라가나', weaknessPercent: 30),
-    StatsWeakAreaItem(label: '스피킹', weaknessPercent: 30),
   ];
 
   @override
@@ -332,7 +330,7 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
 
 class _RadarChartLayout {
   static const double centerTopPadding = 18;
-  static const int sideCount = 6;
+  static const int sideCount = 4;
 
   static List<Offset> calculatePointCenters({
     required Size size,
