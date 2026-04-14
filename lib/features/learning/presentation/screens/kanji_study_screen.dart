@@ -417,7 +417,7 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
       final safeIndex = _currentIndex.clamp(0, kanjis.length - 1);
       final kanji = kanjis[safeIndex];
 
-      _maybeLoadMore(safeIndex, kanjis.length);
+      Future.microtask(() => _maybeLoadMore(safeIndex, kanjis.length));
 
       body = SingleChildScrollView(
         child: Column(
@@ -434,8 +434,8 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
                 learnedCount: _learnedCount,
                 knownCount: _knownCount,
                 unknownCount: _unknownCount,
-                unseenCount: (kanjis.length - _knownCount - _unknownCount)
-                    .clamp(0, kanjis.length),
+                unseenCount: (pageState.totalCount - _knownCount - _unknownCount)
+                    .clamp(0, pageState.totalCount),
               ),
             ),
             const SizedBox(height: 40),
