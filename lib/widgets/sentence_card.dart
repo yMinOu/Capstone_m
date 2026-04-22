@@ -4,6 +4,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
+import 'package:nihongo/services/tts_service.dart';
 
 class SentenceCard extends StatefulWidget {
   final WordModel sentence;
@@ -26,6 +27,12 @@ class SentenceCard extends StatefulWidget {
 class _SentenceCardState extends State<SentenceCard> {
   bool _showRomaji = false;
   bool _showMeaning = false;
+
+  @override
+  void dispose() {
+    TtsService.instance.stop();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(SentenceCard oldWidget) {
@@ -79,8 +86,10 @@ class _SentenceCardState extends State<SentenceCard> {
                           onTap: widget.onTapVocabularySave,
                         ),
                         const SizedBox(width: 8),
-                        // TODO [기능 추가 시]: TTS 재생
-                        _IconButton(icon: Icons.volume_up_outlined),
+                        _IconButton(
+                          icon: Icons.volume_up_outlined,
+                          onTap: () => TtsService.instance.speak(widget.sentence.content),
+                        ),
                       ],
                     ),
 
@@ -154,7 +163,10 @@ class _SentenceCardState extends State<SentenceCard> {
                     child: _NavButton(
                       label: '이전',
                       color: const Color(0xFFE64A19),
-                      onTap: widget.onPrevious,
+                      onTap: widget.onPrevious == null ? null : () {
+                        TtsService.instance.stop();
+                        widget.onPrevious!();
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -162,7 +174,10 @@ class _SentenceCardState extends State<SentenceCard> {
                     child: _NavButton(
                       label: '다음',
                       color: const Color(0xFF1976D2),
-                      onTap: widget.onNext,
+                      onTap: widget.onNext == null ? null : () {
+                        TtsService.instance.stop();
+                        widget.onNext!();
+                      },
                     ),
                   ),
                 ],
