@@ -6,6 +6,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
+import 'package:nihongo/services/tts_service.dart';
 
 class WordCard extends StatefulWidget {
   final WordModel word;
@@ -88,6 +89,7 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
 
   @override
   void dispose() {
+    TtsService.instance.stop();
     _flipController.dispose();
     _scrollController.dispose();
     _exampleScrollController.dispose();
@@ -97,6 +99,11 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
   void _onTap() {
     if (_flipController.isAnimating) return;
     _flipController.forward();
+  }
+
+  void _stopAndCall(VoidCallback callback) {
+    TtsService.instance.stop();
+    callback();
   }
 
   @override
@@ -186,9 +193,11 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
                 icon: Icons.menu_book_outlined,
                 onTap: widget.onTapVocabularySave,
               ),
-              SizedBox(width: 8),
-              // TODO [기능 추가 시]: 발음 버튼 누르면 TTS 재생
-              _CardIconButton(icon: Icons.volume_up_outlined),
+              const SizedBox(width: 8),
+              _CardIconButton(
+                icon: Icons.volume_up_outlined,
+                onTap: () => TtsService.instance.speak(word.content),
+              ),
             ],
           ),
 
@@ -307,7 +316,7 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
                     child: _CardActionButton(
                       label: '몰라요',
                       color: const Color(0xFFE64A19),
-                      onTap: widget.onUnknown!,
+                      onTap: () => _stopAndCall(widget.onUnknown!),
                     ),
                   ),
                 if (widget.onUnknown != null && widget.onKnown != null)
@@ -317,7 +326,7 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
                     child: _CardActionButton(
                       label: '알아요',
                       color: const Color(0xFF1976D2),
-                      onTap: widget.onKnown!,
+                      onTap: () => _stopAndCall(widget.onKnown!),
                     ),
                   ),
               ],
@@ -333,7 +342,7 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
                       label: '이전',
                       color: Colors.grey.shade300,
                       textColor: Colors.grey.shade600,
-                      onTap: widget.onPrevious!,
+                      onTap: () => _stopAndCall(widget.onPrevious!),
                     ),
                   ),
                   const Expanded(child: SizedBox()),

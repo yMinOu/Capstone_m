@@ -5,6 +5,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
+import 'package:nihongo/services/tts_service.dart';
 
 class CharacterCard extends StatefulWidget {
   final WordModel character;
@@ -67,6 +68,7 @@ class _CharacterCardState extends State<CharacterCard>
 
   @override
   void dispose() {
+    TtsService.instance.stop();
     _flipController.dispose();
     super.dispose();
   }
@@ -74,6 +76,11 @@ class _CharacterCardState extends State<CharacterCard>
   void _onTap() {
     if (_flipController.isAnimating) return;
     _flipController.forward();
+  }
+
+  void _stopAndCall(VoidCallback callback) {
+    TtsService.instance.stop();
+    callback();
   }
 
   @override
@@ -179,7 +186,7 @@ class _CharacterCardState extends State<CharacterCard>
                   const SizedBox(width: 8),
                   _IconBtn(
                     icon: Icons.volume_up_outlined,
-                    onTap: () {},
+                    onTap: () => TtsService.instance.speak(widget.character.content),
                   ),
                 ],
               ),
@@ -209,7 +216,7 @@ class _CharacterCardState extends State<CharacterCard>
                     child: _ActionButton(
                       label: '몰라요',
                       color: const Color(0xFFE64A19),
-                      onTap: widget.onUnknown,
+                      onTap: () => _stopAndCall(widget.onUnknown),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -217,7 +224,7 @@ class _CharacterCardState extends State<CharacterCard>
                     child: _ActionButton(
                       label: '알아요',
                       color: const Color(0xFF1976D2),
-                      onTap: widget.onKnown,
+                      onTap: () => _stopAndCall(widget.onKnown),
                     ),
                   ),
                 ],
@@ -233,7 +240,7 @@ class _CharacterCardState extends State<CharacterCard>
                         label: '이전',
                         color: Colors.grey.shade300,
                         textColor: Colors.grey.shade600,
-                        onTap: widget.onPrevious!,
+                        onTap: () => _stopAndCall(widget.onPrevious!),
                       ),
                     ),
                     const Expanded(child: SizedBox()),

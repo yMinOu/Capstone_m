@@ -5,6 +5,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
+import 'package:nihongo/services/tts_service.dart';
 
 class KanjiCard extends StatefulWidget {
   final WordModel word;
@@ -83,6 +84,7 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
+    TtsService.instance.stop();
     _flipController.dispose();
     _meaningScrollController.dispose();
     _exampleScrollController.dispose();
@@ -92,6 +94,11 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
   void _onTap() {
     if (_flipController.isAnimating) return;
     _flipController.forward();
+  }
+
+  void _stopAndCall(VoidCallback callback) {
+    TtsService.instance.stop();
+    callback();
   }
 
   @override
@@ -178,6 +185,7 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
                 const SizedBox(width: 8),
                 _CardIconButton(
                   icon: Icons.volume_up_outlined,
+                  onTap: () => TtsService.instance.speak(word.content),
                 ),
               ],
             ),
@@ -312,7 +320,7 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
                       child: _CardActionButton(
                         label: '몰라요',
                         color: const Color(0xFFE64A19),
-                        onTap: widget.onUnknown!,
+                        onTap: () => _stopAndCall(widget.onUnknown!),
                       ),
                     ),
                   if (widget.onUnknown != null && widget.onKnown != null)
@@ -322,7 +330,7 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
                       child: _CardActionButton(
                         label: '알아요',
                         color: const Color(0xFF1976D2),
-                        onTap: widget.onKnown!,
+                        onTap: () => _stopAndCall(widget.onKnown!),
                       ),
                     ),
                 ],
@@ -338,7 +346,7 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
                         label: '이전',
                         color: Colors.grey.shade300,
                         textColor: Colors.grey.shade600,
-                        onTap: widget.onPrevious!,
+                        onTap: () => _stopAndCall(widget.onPrevious!),
                       ),
                     ),
                     const Expanded(child: SizedBox()),
