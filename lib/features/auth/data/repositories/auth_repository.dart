@@ -73,6 +73,7 @@ class AuthRepository {
       'streakDays': data['streakDays'] ?? 0,
       'lastStudyDateKey': data['lastStudyDateKey'],
       'updatedAt': FieldValue.serverTimestamp(),
+      'isAdmin': data['isAdmin'] ?? false,
       'weakStats': data['weakStats'] ?? {
         '단어': {'know': 0, 'dontKnow': 0, 'score': 30},
         '한자': {'know': 0, 'dontKnow': 0, 'score': 30},
