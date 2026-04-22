@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/auth/presentation/providers/auth_provider.dart';
 import 'package:nihongo/features/my_page/presentation/providers/my_page_provider.dart';
+import 'package:nihongo/features/my_page/presentation/screens/notice_list_screen.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_dialogs.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_menu_tile.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_profile_section.dart';
@@ -103,7 +104,10 @@ class MyPageScreen extends ConsumerWidget {
                   
                   MyPageMenuTile(
                     title: '공지사항',
-                    onTap: (){},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const NoticeListScreen()),
+                    ),
                   ),
                   Divider(height: 0, thickness: 0.5,),
                   MyPageMenuTile(

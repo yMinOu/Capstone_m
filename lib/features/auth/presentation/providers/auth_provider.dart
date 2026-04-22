@@ -1,5 +1,6 @@
 /// 인증 관련 상태관리(Riverpod) 정의.
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/auth/data/repositories/auth_repository.dart';
@@ -74,4 +75,17 @@ final authActionProvider =
 StateNotifierProvider<AuthActionNotifier, AuthActionState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return AuthActionNotifier(repository);
+});
+
+/// 현재 로그인한 유저의 isAdmin 여부를 Firestore에서 스트림으로 구독
+final isAdminProvider = StreamProvider<bool>((ref) {
+  final userAsync = ref.watch(authUserProvider);
+  final user = userAsync.valueOrNull;
+  if (user == null) return Stream.value(false);
+
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .snapshots()
+      .map((doc) => doc.data()?['isAdmin'] == true);
 });
