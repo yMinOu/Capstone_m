@@ -147,6 +147,12 @@ class _CommunityListView extends ConsumerWidget {
                     // 상단 정보: 계정 이름 · 주제 · 시간
                     Row(
                       children: [
+                        const CircleAvatar(
+                          radius: 10,
+                          backgroundColor: Colors.transparent,
+                          backgroundImage: AssetImage('assets/images/common/cat.png'),
+                        ),
+                        const SizedBox(width: 6),
                         Text(
                           post.authorName,
                           style: const TextStyle(
