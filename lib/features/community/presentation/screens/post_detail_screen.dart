@@ -307,8 +307,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           children: [
                             const CircleAvatar(
                               radius: 18,
-                              backgroundColor: AppColors.primary,
-                              child: Icon(Icons.person, color: Colors.white, size: 20),
+                              backgroundColor: Colors.transparent,
+                              backgroundImage: AssetImage('assets/images/common/cat.png'),
                             ),
                             const SizedBox(width: 12),
                             Column(
@@ -509,6 +509,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   const Icon(Icons.subdirectory_arrow_right, size: 16, color: AppColors.textGrey),
                   const SizedBox(width: 8),
                 ],
+                const CircleAvatar(
+                  radius: 10,
+                  backgroundColor: Colors.transparent,
+                  backgroundImage: AssetImage('assets/images/common/cat.png'),
+                ),
+                const SizedBox(width: 6),
                 Text(comment.authorName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 const Spacer(),
                 Text(_formatDateTime(comment.createdAt), style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
