@@ -1,6 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/my_page/data/repositories/my_page_repository.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+final appVersionProvider = FutureProvider<String>((ref) async {
+  final info = await PackageInfo.fromPlatform();
+  return 'v${info.version}';
+});
 
 final myPageRepositoryProvider = Provider<MyPageRepository>((ref) {
   return MyPageRepository();
