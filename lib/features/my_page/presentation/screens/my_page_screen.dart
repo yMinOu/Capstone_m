@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nihongo/features/auth/presentation/providers/auth_provider.dart';
 import 'package:nihongo/features/my_page/presentation/providers/my_page_provider.dart';
+import 'package:nihongo/features/my_page/data/repositories/feedback_repository.dart';
+import 'package:nihongo/features/my_page/presentation/screens/feedback_list_screen.dart';
 import 'package:nihongo/features/my_page/presentation/screens/notice_list_screen.dart';
+import 'package:nihongo/features/my_page/presentation/screens/privacy_screen.dart';
+import 'package:nihongo/features/my_page/presentation/screens/terms_screen.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_dialogs.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_menu_tile.dart';
 import 'package:nihongo/features/my_page/presentation/widgets/my_page_profile_section.dart';
@@ -15,6 +19,7 @@ class MyPageScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authUserState = ref.watch(authUserProvider);
     final myPageActionState = ref.watch(myPageActionProvider);
+    final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
 
     ref.listen<MyPageActionState>(myPageActionProvider, (previous, next) {
       if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
@@ -112,9 +117,28 @@ class MyPageScreen extends ConsumerWidget {
                   Divider(height: 0, thickness: 0.5,),
                   MyPageMenuTile(
                     title: '의견 남기기',
-                    onTap: (){},
+                    onTap: () => showFeedbackDialog(
+                      context,
+                      onSubmit: (content) =>
+                          FeedbackRepository().submitFeedback(
+                        uid: user.uid,
+                        content: content,
+                      ),
+                    ),
                   ),
                   Divider(height: 0, thickness: 0.5,),
+                  if (isAdmin) ...[
+                    MyPageMenuTile(
+                      title: '의견 보기',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FeedbackListScreen(),
+                        ),
+                      ),
+                    ),
+                    Divider(height: 0, thickness: 0.5,),
+                  ],
 
                   const SizedBox(height: 12),
                   
@@ -123,9 +147,9 @@ class MyPageScreen extends ConsumerWidget {
 
                   MyPageMenuTile(
                     title: '현재 버전',
-                    trailing: const Text(
-                      'v1.0.0',
-                      style: TextStyle(color: AppColors.textGrey),
+                    trailing: Text(
+                      ref.watch(appVersionProvider).valueOrNull ?? '-',
+                      style: const TextStyle(color: AppColors.textGrey),
                     ),
                     onTap: null,
                   ),
@@ -133,13 +157,19 @@ class MyPageScreen extends ConsumerWidget {
 
                   MyPageMenuTile(
                     title: '이용약관',
-                    onTap: (){},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TermsScreen()),
+                    ),
                   ),
                   Divider(height: 0, thickness: 0.5,),
 
                   MyPageMenuTile(
                     title: '개인정보 처리방침',
-                    onTap: (){},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+                    ),
                   ),
                 ],
               ),
