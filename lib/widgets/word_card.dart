@@ -3,6 +3,7 @@
 // - 앞면: 일본어 단어만 표시 (탭하면 뒤집기)
 // - 뒷면: 의미, 예문, 버튼 (버튼은 옵션)
 
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
@@ -42,6 +43,11 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
   bool _showFade = true;
   bool _showExampleFade = true;
 
+  // 의미 깜빡이
+  bool _blinkEnabled = false;
+  bool _meaningVisible = true;
+  Timer? _blinkTimer;
+
   @override
   void initState() {
     super.initState();
@@ -80,9 +86,17 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
       _isFlipped = widget.initialFlipped;
       if (_scrollController.hasClients) _scrollController.jumpTo(0);
       if (_exampleScrollController.hasClients) _exampleScrollController.jumpTo(0);
+      _blinkTimer?.cancel();
+      _blinkTimer = null;
+      if (_blinkEnabled) {
+        _blinkTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+          if (mounted) setState(() => _meaningVisible = !_meaningVisible);
+        });
+      }
       setState(() {
         _showFade = true;
         _showExampleFade = true;
+        _meaningVisible = true;
       });
     }
   }
@@ -93,7 +107,24 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
     _flipController.dispose();
     _scrollController.dispose();
     _exampleScrollController.dispose();
+    _blinkTimer?.cancel();
     super.dispose();
+  }
+
+  void _toggleBlink() {
+    setState(() {
+      _blinkEnabled = !_blinkEnabled;
+      if (_blinkEnabled) {
+        _meaningVisible = true;
+        _blinkTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+          if (mounted) setState(() => _meaningVisible = !_meaningVisible);
+        });
+      } else {
+        _blinkTimer?.cancel();
+        _blinkTimer = null;
+        _meaningVisible = true;
+      }
+    });
   }
 
   void _onTap() {
@@ -185,18 +216,28 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 책 아이콘 + 발음 버튼
+          // 깜빡이 토글(좌) + 책 아이콘 + 발음 버튼(우)
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _CardIconButton(
-                icon: Icons.menu_book_outlined,
-                onTap: widget.onTapVocabularySave,
+              Switch(
+                value: _blinkEnabled,
+                onChanged: (_) => _toggleBlink(),
+                activeColor: const Color(0xFF1976D2),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              const SizedBox(width: 8),
-              _CardIconButton(
-                icon: Icons.volume_up_outlined,
-                onTap: () => TtsService.instance.speak(word.content),
+              Row(
+                children: [
+                  _CardIconButton(
+                    icon: Icons.menu_book_outlined,
+                    onTap: widget.onTapVocabularySave,
+                  ),
+                  const SizedBox(width: 8),
+                  _CardIconButton(
+                    icon: Icons.volume_up_outlined,
+                    onTap: () => TtsService.instance.speak(word.content),
+                  ),
+                ],
               ),
             ],
           ),
@@ -229,37 +270,40 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
           // 의미: 항상 3칸 높이 고정 + 넘치면 스크롤
           _InfoRow(
             label: '의미',
-            content: SizedBox(
-              height: 93,
-              child: Stack(
-                children: [
-                  SingleChildScrollView(
-                    controller: _scrollController,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (int i = 0; i < word.meaning.length; i++)
-                          _MeaningItem(index: i + 1, text: word.meaning[i]),
-                      ],
-                    ),
-                  ),
-                  if (_showFade)
-                    const Positioned(
-                      bottom: 0, left: 0, right: 0,
-                      child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0x00FFFFFF), Colors.white],
-                            ),
-                          ),
-                          child: SizedBox(height: 32, width: double.infinity),
-                        ),
+            content: Opacity(
+              opacity: _meaningVisible ? 1.0 : 0.0,
+              child: SizedBox(
+                height: 93,
+                child: Stack(
+                  children: [
+                    SingleChildScrollView(
+                      controller: _scrollController,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (int i = 0; i < word.meaning.length; i++)
+                            _MeaningItem(index: i + 1, text: word.meaning[i]),
+                        ],
                       ),
                     ),
-                ],
+                    if (_showFade)
+                      const Positioned(
+                        bottom: 0, left: 0, right: 0,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color(0x00FFFFFF), Colors.white],
+                              ),
+                            ),
+                            child: SizedBox(height: 32, width: double.infinity),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -75,27 +75,6 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
     print('[학습타이머] 시작 - uid: $_uid');
   }
 
-  // TODO [임시]: 개발 테스트용 초기화 - 배포 전 제거할 것
-  Future<void> _resetProgress() async {
-    if (_uid == null) return;
-
-    await _learningProgressRepository!.resetProgress(
-      uid: _uid!,
-      subCategory: widget.categoryId,
-    );
-
-    setState(() {
-      _knownCount = 0;
-      _unknownCount = 0;
-      _learnedCount = 0;
-      _currentIndex = 0;
-      _isCardFlipped = false;
-      _wordAnswers.clear();
-      _initialWordAnswers.clear();
-      _answeredWords.clear();
-    });
-  }
-
   // 알아요/몰라요 답변 처리 - 로컬 상태만 변경
   Future<void> _applyAnswer({
     required WordModel word,
@@ -429,7 +408,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
         children: [
           _TopBar(
             title: widget.categoryTitle,
-            onReset: _resetProgress,
+
             onBack: _saveStudySessionIfNeeded,
           ),
           const Expanded(child: Center(child: CircularProgressIndicator())),
@@ -440,7 +419,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
         children: [
           _TopBar(
             title: widget.categoryTitle,
-            onReset: _resetProgress,
+
             onBack: _saveStudySessionIfNeeded,
           ),
           Expanded(
@@ -459,7 +438,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
         children: [
           _TopBar(
             title: widget.categoryTitle,
-            onReset: _resetProgress,
+
             onBack: _saveStudySessionIfNeeded,
           ),
           const Expanded(
@@ -482,7 +461,7 @@ class _WordStudyScreenState extends ConsumerState<WordStudyScreen> {
           children: [
             _TopBar(
               title: widget.categoryTitle,
-              onReset: _resetProgress,
+  
               onBack: _saveStudySessionIfNeeded,
             ),
             const SizedBox(height: 16),
@@ -610,12 +589,10 @@ class _WeakStatCounter {
 // ============================================================
 class _TopBar extends StatelessWidget {
   final String title;
-  final Future<void> Function() onReset;
   final Future<void> Function() onBack;
 
   const _TopBar({
     required this.title,
-    required this.onReset,
     required this.onBack,
   });
 
@@ -640,12 +617,6 @@ class _TopBar extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.refresh, color: Colors.grey),
-          onPressed: () async {
-            await onReset();
-          },
         ),
       ],
     );

@@ -2,6 +2,7 @@
 // - 앞면: 한자만 표시 (탭하면 뒤집기)
 // - 뒷면: 의미, 훈독, 음독, 예시, 버튼
 
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nihongo/features/learning/data/models/word_model.dart';
@@ -39,6 +40,10 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
   bool _showMeaningFade = true;
   bool _showExampleFade = true;
 
+  bool _blinkEnabled = false;
+  bool _meaningVisible = true;
+  Timer? _blinkTimer;
+
   @override
   void initState() {
     super.initState();
@@ -75,9 +80,17 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
       _isFlipped = widget.initialFlipped;
       if (_meaningScrollController.hasClients) _meaningScrollController.jumpTo(0);
       if (_exampleScrollController.hasClients) _exampleScrollController.jumpTo(0);
+      _blinkTimer?.cancel();
+      _blinkTimer = null;
+      if (_blinkEnabled) {
+        _blinkTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+          if (mounted) setState(() => _meaningVisible = !_meaningVisible);
+        });
+      }
       setState(() {
         _showMeaningFade = true;
         _showExampleFade = true;
+        _meaningVisible = true;
       });
     }
   }
@@ -88,7 +101,24 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
     _flipController.dispose();
     _meaningScrollController.dispose();
     _exampleScrollController.dispose();
+    _blinkTimer?.cancel();
     super.dispose();
+  }
+
+  void _toggleBlink() {
+    setState(() {
+      _blinkEnabled = !_blinkEnabled;
+      if (_blinkEnabled) {
+        _meaningVisible = true;
+        _blinkTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+          if (mounted) setState(() => _meaningVisible = !_meaningVisible);
+        });
+      } else {
+        _blinkTimer?.cancel();
+        _blinkTimer = null;
+        _meaningVisible = true;
+      }
+    });
   }
 
   void _onTap() {
@@ -174,18 +204,28 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 책 아이콘 + 발음 버튼
+            // 깜빡이 토글(좌) + 책 아이콘 + 발음 버튼(우)
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _CardIconButton(
-                  icon: Icons.menu_book_outlined,
-                  onTap: widget.onTapVocabularySave,
+                Switch(
+                  value: _blinkEnabled,
+                  onChanged: (_) => _toggleBlink(),
+                  activeColor: const Color(0xFF1976D2),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                const SizedBox(width: 8),
-                _CardIconButton(
-                  icon: Icons.volume_up_outlined,
-                  onTap: () => TtsService.instance.speak(word.content),
+                Row(
+                  children: [
+                    _CardIconButton(
+                      icon: Icons.menu_book_outlined,
+                      onTap: widget.onTapVocabularySave,
+                    ),
+                    const SizedBox(width: 8),
+                    _CardIconButton(
+                      icon: Icons.volume_up_outlined,
+                      onTap: () => TtsService.instance.speak(word.content),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -205,7 +245,9 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
             // 의미
             _InfoRow(
               label: '의미',
-              content: word.meaning.length <= 1
+              content: Opacity(
+              opacity: _meaningVisible ? 1.0 : 0.0,
+              child: word.meaning.length <= 1
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -247,6 +289,7 @@ class _KanjiCardState extends State<KanjiCard> with SingleTickerProviderStateMix
                         ],
                       ),
                     ),
+              ),
             ),
 
             const SizedBox(height: 8),

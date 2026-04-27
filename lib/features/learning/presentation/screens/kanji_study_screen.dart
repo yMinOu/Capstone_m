@@ -69,26 +69,6 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
     }
   }
 
-  Future<void> _resetProgress() async {
-    if (_uid == null) return;
-
-    await _learningProgressRepository!.resetProgress(
-      uid: _uid!,
-      subCategory: widget.categoryId,
-    );
-
-    setState(() {
-      _knownCount = 0;
-      _unknownCount = 0;
-      _learnedCount = 0;
-      _currentIndex = 0;
-      _isCardFlipped = false;
-      _wordAnswers.clear();
-      _initialWordAnswers.clear();
-      _answeredWords.clear();
-    });
-  }
-
   Future<void> _applyAnswer({
     required WordModel word,
     required String newStatus,
@@ -372,7 +352,7 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
         children: [
           _TopBar(
             title: widget.categoryTitle,
-            onReset: _resetProgress,
+
             onBack: _saveStudySessionIfNeeded,
           ),
           const Expanded(child: Center(child: CircularProgressIndicator())),
@@ -383,7 +363,7 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
         children: [
           _TopBar(
             title: widget.categoryTitle,
-            onReset: _resetProgress,
+
             onBack: _saveStudySessionIfNeeded,
           ),
           Expanded(
@@ -402,7 +382,7 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
         children: [
           _TopBar(
             title: widget.categoryTitle,
-            onReset: _resetProgress,
+
             onBack: _saveStudySessionIfNeeded,
           ),
           const Expanded(
@@ -425,7 +405,7 @@ class _KanjiStudyScreenState extends ConsumerState<KanjiStudyScreen> {
           children: [
             _TopBar(
               title: widget.categoryTitle,
-              onReset: _resetProgress,
+  
               onBack: _saveStudySessionIfNeeded,
             ),
             const SizedBox(height: 16),
@@ -545,16 +525,14 @@ class _WeakStatCounter {
 }
 
 // ============================================================
-// 상단 뒤로가기 + 제목 + 초기화
+// 상단 뒤로가기 + 제목
 // ============================================================
 class _TopBar extends StatelessWidget {
   final String title;
-  final Future<void> Function() onReset;
   final Future<void> Function() onBack;
 
   const _TopBar({
     required this.title,
-    required this.onReset,
     required this.onBack,
   });
 
@@ -574,10 +552,6 @@ class _TopBar extends StatelessWidget {
             title,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.refresh, color: Colors.grey),
-          onPressed: () async => await onReset(),
         ),
       ],
     );
