@@ -49,11 +49,11 @@ class VocabularyCardWidget extends StatelessWidget {
                 width: 40,
                 height: 40,
                 alignment: Alignment.center,
-                child: const Icon(
-                  Icons.menu_book_outlined,
-                  size: 30,
-                  color: Color(0xFF2B2B2B),
-                ),
+                child: Image.asset(
+                  'assets/images/common/word.png',
+                  width: 80,
+                  height: 80,
+                )
               ),
               const SizedBox(width: 12),
               Expanded(

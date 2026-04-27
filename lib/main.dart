@@ -6,6 +6,7 @@ import 'package:nihongo/core/theme/app_theme.dart';
 import 'package:nihongo/features/auth/presentation/widgets/auth_gate.dart';
 import 'package:nihongo/firebase_options_dev.dart' as dev;
 import 'package:nihongo/firebase_options_prod.dart' as prod;
+import 'package:nihongo/features/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +35,7 @@ class NihongoApp extends StatelessWidget {
       title: 'Nihongo App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const AuthGate(),
+      home: const SplashScreen(),
     );
   }
 }
