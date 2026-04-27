@@ -73,7 +73,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         animationSeed: _statsAnimationSeed,
         isActive: _selectedIndex == 3,
       ),
-      const MyPageScreen(),
+      MyPageScreen(isActive: _selectedIndex == 4),
     ];
   }
 

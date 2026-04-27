@@ -206,10 +206,10 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
             context: context,
             builder: (_) => const VocabularyCreateDialog(),
           ),
-          icon: Image.asset(
-            'assets/images/common/word.png',
-            width: 35,
-            height: 35,
+          icon: Icon(
+            Icons.menu_book_rounded,
+            size: 28,
+            color: const Color(0xFFFF8989),
           ),
           label: const Text(
             '단어장 생성',
