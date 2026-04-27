@@ -78,6 +78,7 @@ flutter:
     - assets/images/stats/cat_video.mp4
     - assets/splash/splash.mp4
     - assets/images/common/mypage_cat.mp4
+    - assets/study/
 
   # To add assets to your application, add an assets section, like this:
   #  assets:
