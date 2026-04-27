@@ -237,10 +237,10 @@ class VocabularySelectBottomSheet extends ConsumerWidget {
                             ),
                             child: Row(
                               children: [
-                                const Icon(
-                                  Icons.menu_book_outlined,
-                                  size: 22,
-                                  color: Color(0xFF2B2B2B),
+                                Image.asset(
+                                  'assets/images/common/word.png',
+                                  width: 80,
+                                  height: 80,
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
