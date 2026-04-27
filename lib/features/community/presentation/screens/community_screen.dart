@@ -50,28 +50,45 @@ class _TabButton extends StatelessWidget {
     required this.onTap,
   });
 
+  double _indicatorWidth(String text) {
+    switch (text.length) {
+      case 2:
+        return 28;
+      case 4:
+        return 56;
+      case 5:
+        return 70;
+      default:
+        return text.length * 14;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? AppColors.textBlack : AppColors.textGrey.withOpacity(0.5),
+              fontSize: 15,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.black : Colors.grey,
             ),
           ),
-          if (isSelected)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              height: 2,
-              width: 20,
-              color: AppColors.textBlack,
+          const SizedBox(height: 4),
+
+          // 🔥 애니메이션 제거
+          Container(
+            height: 2,
+            width: isSelected ? _indicatorWidth(title) : 0,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF8989),
+              borderRadius: BorderRadius.circular(10),
             ),
+          ),
         ],
       ),
     );
@@ -121,7 +138,7 @@ class _CommunityListView extends ConsumerWidget {
     return postsAsync.when(
       data: (posts) {
         if (posts.isEmpty) return const Center(child: Text('게시글이 없습니다.'));
-        
+
         return ListView.separated(
           itemCount: posts.length,
           separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),

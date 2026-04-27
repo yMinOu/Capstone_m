@@ -317,11 +317,9 @@ class _MyPageVideoHeaderState extends State<_MyPageVideoHeader> {
               width: 100,
               height: 100,
               child: _isInitialized
-                  ? FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _controller.value.size.width,
-                  height: _controller.value.size.height,
+                  ? Center(
+                child: AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
                   child: VideoPlayer(_controller),
                 ),
               )

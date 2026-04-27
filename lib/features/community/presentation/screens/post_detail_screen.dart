@@ -299,8 +299,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 children: [
                   // 게시글 본문 영역
                   Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
@@ -345,13 +344,14 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                             Text('${post.commentCount}', style: const TextStyle(color: Colors.grey)),
                           ],
                         ),
+                        const SizedBox(height: 10),
                       ],
                     ),
                   ),
                   const Divider(thickness: 8, color: Color(0xFFF5F5F5)),
                   // 댓글 영역
                   Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: const Text('댓글', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                   commentsAsync.when(
@@ -367,7 +367,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: parentComments.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) =>
+                            Divider(height: 0, thickness: 0.8, color: Colors.grey[300]),
                         itemBuilder: (context, index) {
                           final comment = parentComments[index];
                           final isCommentAuthor = comment.authorId == currentUserId;
@@ -384,7 +385,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               // 답글들 표시 (들여쓰기 적용)
                               if (replies.isNotEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 30.0),
+                                  padding: const EdgeInsets.only(
+                                    left: 30,
+                                    top: 0,
+                                  ),
                                   child: Column(
                                     children: replies.map((reply) {
                                       final isReplyAuthor = reply.authorId == currentUserId;
@@ -451,23 +455,44 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       Expanded(
                         child: TextField(
                           controller: _commentController,
+                          cursorColor: const Color(0xFFFF8989),
                           decoration: InputDecoration(
                             hintText: _replyToCommentId != null ? '답글을 입력하세요.' : '댓글을 입력하세요.',
                             hintStyle: const TextStyle(fontSize: 14),
                             filled: true,
                             fillColor: const Color(0xFFF5F5F5),
-                            border: OutlineInputBorder(
+
+                            enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide.none,
+                              borderSide: const BorderSide(
+                                color: Colors.grey,
+                                width: 1,
+                              ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFFF8989),
+                                width: 1.5,
+                              ),
+                            ),
+
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       IconButton(
                         onPressed: _submitComment,
-                        icon: const Icon(Icons.send, color: AppColors.primary),
+                        icon: const Icon(
+                          Icons.send,
+                          color: Color(0xFFFF8989),
+                          size: 30,
+                        ),
                       ),
                     ],
                   ),
@@ -499,7 +524,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       },
       child: Container(
         color: isSelected ? Colors.grey[200] : Colors.transparent,
-        padding: const EdgeInsets.all(20.0),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: isReply ? 0 : 8,
+          bottom: 12,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -620,7 +650,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(comment.content, style: const TextStyle(fontSize: 14)),
           ],
         ),
