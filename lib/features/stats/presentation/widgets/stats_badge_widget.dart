@@ -59,7 +59,7 @@ class StatsBadgeWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: const Color(0xFFD9D9D9)),
+        border: Border.all(color: const Color(0xFFFFCCCC)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -98,7 +98,7 @@ class StatsBadgeWidget extends StatelessWidget {
                         imagePath: badge.imagePath,
                         label: badge.label,
                         borderColor: badge.borderColor,
-                        badgeSize: 76, // 고정 or 살짝 줄여도 됨
+                        badgeSize: badgeSize
                       ),
                     );
                   }).toList(),

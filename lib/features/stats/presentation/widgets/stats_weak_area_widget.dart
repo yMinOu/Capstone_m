@@ -24,6 +24,7 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
     with SingleTickerProviderStateMixin {
   static const double _maxChartWidth = 360;
   static const double _chartAspectRatio = 0.9;
+  static const double _weakThreshold = 20;
 
   late final AnimationController _fillAnimationController;
   late final Animation<double> _fillAnimation;
@@ -41,6 +42,28 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
     StatsWeakAreaItem(label: '가타카나', weaknessPercent: 30),
     StatsWeakAreaItem(label: '히라가나', weaknessPercent: 30),
   ];
+
+  String _messageText(List<StatsWeakAreaItem> items) {
+    if (items.isEmpty) {
+      return widget.message;
+    }
+
+    final average =
+        items.map((item) => item.weaknessPercent).reduce((a, b) => a + b) /
+            items.length;
+
+    final weakLabels = items
+        .where((item) => average - item.weaknessPercent >= _weakThreshold)
+        .map((item) => item.label)
+        .toList();
+
+    if (weakLabels.isEmpty) {
+      return widget.message;
+    }
+
+    final joinedLabels = weakLabels.join(', ');
+    return '$joinedLabels 학습을 조금 더 열심히 해보세요!';
+  }
 
   @override
   void initState() {
@@ -134,13 +157,14 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
   @override
   Widget build(BuildContext context) {
     final items = _safeItems;
+    final messageText = _messageText(items);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFFFFF),
         border: Border.all(
-          color: const Color(0xFFD9D9D9),
+          color: const Color(0xFFFFCCCC),
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -162,8 +186,8 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
                 builder: (context, constraints) {
                   final chartWidth = math.min(
                     _maxChartWidth,
-                    constraints.maxWidth,
-                  );
+                    math.max(0, constraints.maxWidth - 24),
+                  ).toDouble();
                   final chartHeight = chartWidth * _chartAspectRatio;
                   final chartTop = 16.0;
                   final chartLeft = (constraints.maxWidth - chartWidth) / 2;
@@ -203,11 +227,8 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
                               behavior: HitTestBehavior.translucent,
                               onTap: () {
                                 setState(() {
-                                  if (_selectedIndex == index) {
-                                    _selectedIndex = null;
-                                  } else {
-                                    _selectedIndex = index;
-                                  }
+                                  _selectedIndex =
+                                  _selectedIndex == index ? null : index;
                                 });
                               },
                               child: Container(
@@ -219,7 +240,7 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
                                   width: 8,
                                   height: 8,
                                   decoration: const BoxDecoration(
-                                    color: Colors.black,
+                                    color: Color(0xFFFF8989),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -250,8 +271,11 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
               vertical: 12,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F4F4),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: const Color(0xFFFFCCCC),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -263,7 +287,7 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    widget.message,
+                    messageText,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -312,8 +336,15 @@ class _StatsWeakAreaWidgetState extends State<StatsWeakAreaWidget>
           vertical: 6,
         ),
         decoration: BoxDecoration(
-          color: Colors.black,
+          color: const Color(0xFFFF8989),
           borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF8989).withOpacity(0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Text(
           '$score',
@@ -389,26 +420,26 @@ class _RadarChartPainter extends CustomPainter {
     const sideCount = _RadarChartLayout.sideCount;
 
     final gridPaint = Paint()
-      ..color = const Color(0xFFE1E1E1)
+      ..color = const Color(0xFFFFCCCC).withOpacity(0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
     final axisPaint = Paint()
-      ..color = const Color(0xFFE1E1E1)
+      ..color = const Color(0xFFFFCCCC).withOpacity(0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
     final fillPaint = Paint()
-      ..color = const Color(0xFF8C8C8C).withOpacity(0.45)
+      ..color = const Color(0xFFFFCCCC).withOpacity(0.45)
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()
-      ..color = Colors.black
+      ..color = const Color(0xFFFF8989)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.8;
 
     final pointPaint = Paint()
-      ..color = Colors.black
+      ..color = const Color(0xFFFF8989)
       ..style = PaintingStyle.fill;
 
     for (int level = 1; level <= 4; level++) {
@@ -514,8 +545,8 @@ class _RadarChartPainter extends CustomPainter {
         text: text,
         style: const TextStyle(
           fontSize: 15,
-          color: Color(0xFF777777),
-          fontWeight: FontWeight.w500,
+          color: Color(0xFFD37B7B),
+          fontWeight: FontWeight.w600,
         ),
       ),
       textDirection: TextDirection.ltr,

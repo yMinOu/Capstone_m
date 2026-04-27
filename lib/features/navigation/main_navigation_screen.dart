@@ -73,7 +73,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         animationSeed: _statsAnimationSeed,
         isActive: _selectedIndex == 3,
       ),
-      const MyPageScreen(),
+      MyPageScreen(isActive: _selectedIndex == 4),
     ];
   }
 
@@ -142,6 +142,21 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
           onTap: _onItemTapped,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
+
+          backgroundColor: const Color(0xFFFFFAFA),
+
+          selectedItemColor: const Color(0xFFFF8989), // 선택 색
+          unselectedItemColor: const Color(0xFFB0B0B0), // 비선택
+
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 11,
+          ),
+
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.edit_outlined),
@@ -167,7 +182,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
               label: '마이페이지',
             ),
           ],
-        ),
+        )
       ),
     );
   }

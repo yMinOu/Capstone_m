@@ -126,6 +126,7 @@ class _StatsContent extends StatelessWidget {
                   totalStudyCount: stats.totalStudyCount,
                   totalStudySeconds: stats.totalStudySeconds,
                 ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -452,6 +453,7 @@ class _StatsTopVideoSectionState extends State<StatsTopVideoSection> {
         ],
       ),
     );
+
   }
 }
 
@@ -555,7 +557,7 @@ class _OverlayProgressBar extends StatelessWidget {
                 width: barWidth * clampedProgress,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF6FA9),
+                  color: const Color(0xFFFF8989),
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -570,7 +572,7 @@ class _OverlayProgressBar extends StatelessWidget {
                       color: Colors.white,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFFFC6DC),
+                        color: const Color(0xFFFFCCCC),
                         width: 1.5,
                       ),
                     ),
@@ -597,7 +599,7 @@ class _OverlayProgressBar extends StatelessWidget {
                               color: Colors.white,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: const Color(0xFFFF6FA9),
+                                color: const Color(0xFFFF8989),
                                 width: 3,
                               ),
                               boxShadow: [
@@ -622,7 +624,7 @@ class _OverlayProgressBar extends StatelessWidget {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(999),
                                     border: Border.all(
-                                      color: const Color(0xFFFF6FA9),
+                                      color: const Color(0xFFFF8989),
                                       width: 1.5,
                                     ),
                                     boxShadow: [

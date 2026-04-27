@@ -45,13 +45,13 @@ class VocabularyCardWidget extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 55,
+                height: 55,
                 alignment: Alignment.center,
                 child: Image.asset(
                   'assets/images/common/word.png',
-                  width: 50,
-                  height: 34,
+                  width: 55,
+                  height: 55,
                   fit: BoxFit.contain,
                 ),
               ),
