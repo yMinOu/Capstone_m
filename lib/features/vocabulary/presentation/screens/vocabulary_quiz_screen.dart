@@ -391,8 +391,10 @@ class _QuizProgressBar extends StatelessWidget {
       child: LinearProgressIndicator(
         minHeight: 14,
         value: progress,
-        backgroundColor: const Color(0xFFE2E2E2),
-        valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+        backgroundColor: const Color(0xFFFFEDED),
+        valueColor: const AlwaysStoppedAnimation<Color>(
+          Color(0xFFFFB3B3),
+        ),
       ),
     );
   }

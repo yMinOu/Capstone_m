@@ -10,6 +10,7 @@ import 'package:nihongo/features/community/presentation/screens/community_write_
 import 'package:nihongo/features/community/presentation/providers/community_provider.dart';
 import 'package:nihongo/features/stats/presentation/screens/stats_screen.dart';
 import 'package:nihongo/features/my_page/presentation/screens/my_page_screen.dart';
+import 'package:nihongo/features/vocabulary/presentation/providers/vocabulary_provider.dart';
 
 class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
@@ -84,6 +85,12 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         _statsAnimationSeed++;
       }
     });
+
+    if (index == 1) {
+      Future.microtask(() {
+        ref.read(learningProgressPagingProvider.notifier).refreshOnlyNew();
+      });
+    }
   }
 
   @override

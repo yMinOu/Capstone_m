@@ -222,7 +222,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
             foregroundColor: const Color(0xFF222222),
             backgroundColor: Colors.white,
             side: const BorderSide(
-              color: Color(0xFFBEBEBE),
+              color: Color(0xFFFFCCCC),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),
@@ -369,8 +369,7 @@ class _TopTabButton extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isSelected ? Colors.black : Colors.transparent,
-              width: 2,
+              color: isSelected ? const Color(0xFFFFCCCC) : Colors.transparent,              width: 2,
             ),
           ),
         ),
@@ -423,7 +422,7 @@ class _WordFilterHeader extends StatelessWidget {
         children: [
           OutlinedButton.icon(
             onPressed: onTapFilter,
-            icon: const Icon(Icons.tune, size: 16),
+            icon: const Icon(Icons.tune, size: 16, color: Color(0xFFD37B7B),),
             label: const Text(
               '필터',
               style: TextStyle(
@@ -435,7 +434,7 @@ class _WordFilterHeader extends StatelessWidget {
               foregroundColor: const Color(0xFF222222),
               backgroundColor: Colors.white,
               side: const BorderSide(
-                color: Color(0xFFBEBEBE),
+                color: Color(0xFFFFCCCC),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),

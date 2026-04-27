@@ -21,90 +21,114 @@ class VocabularyCardWidget extends StatelessWidget {
         '${vocabulary.createdAt.month.toString().padLeft(2, '0')}-'
         '${vocabulary.createdAt.day.toString().padLeft(2, '0')}';
 
+    final description = (vocabulary.description ?? '').trim();
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.fromLTRB(16, 14, 10, 14),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFFD9D9D9),
-            ),
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFFE0E0)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 10,
-                offset: Offset(0, 3),
+                color: Color(0x10000000),
+                blurRadius: 14,
+                offset: Offset(0, 4),
               ),
             ],
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 52,
+                height: 52,
                 alignment: Alignment.center,
                 child: Image.asset(
                   'assets/images/common/word.png',
-                  width: 80,
-                  height: 80,
-                )
+                  width: 50,
+                  height: 34,
+                  fit: BoxFit.contain,
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vocabulary.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111111),
+                      ),
+                    ),
+                    if (description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        vocabulary.title,
+                        description,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF111111),
-                        ),
-                      ),
-                      if ((vocabulary.description ?? '').trim().isNotEmpty) ...[
-                        Text(
-                          vocabulary.description!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF9A9A9A),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                      Text(
-                        '${vocabulary.wordCount}개 단어 · $createdAtText',
-                        style: const TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF9A9A9A),
+                          color: Color(0xFF8A8A8A),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          '${vocabulary.wordCount}개 단어',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFC7C7C7),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          createdAtText,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFAAAAAA),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(width: 8),
               IconButton(
                 onPressed: onDelete,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                constraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
                 icon: const Icon(
                   Icons.delete_outline,
                   size: 20,
-                  color: Color(0xFF8F8F8F),
+                  color: Color(0xFFB0B0B0),
                 ),
               ),
             ],

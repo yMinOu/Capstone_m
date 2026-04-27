@@ -55,7 +55,7 @@ class WordListItemWidget extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 16,
-                          color: Color(0xFF4F6B8A),
+                          color: Color(0xFFD37B7B),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -69,15 +69,15 @@ class WordListItemWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE7F5FF),
+                  color: const Color(0xFFFFFCFC),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: const Color(0xFF8BD0FF)),
+                  border: Border.all(color: const Color(0xFFFFB9B9)),
                 ),
                 child: Text(
                   word.subCategory,
                   style: const TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF2D9CDB),
+                    color: Color(0xFF3A3A3A),
                   ),
                 ),
               ),
@@ -93,16 +93,20 @@ class WordListItemWidget extends StatelessWidget {
       case 'know':
         return const CircleAvatar(
           radius: 14,
-          backgroundColor: Color(0xFFF3F3F3),
-          child: Icon(Icons.thumb_up_alt_outlined, size: 16),
+          backgroundColor: Color(0xFFB0E0FF),
+          child: Icon(
+            Icons.thumb_up_alt_outlined,
+            size: 16,
+            color: Colors.white,
+          ),
         );
       case 'dontKnow':
         return const CircleAvatar(
           radius: 14,
-          backgroundColor: Color(0xFFFBECEC),
+          backgroundColor: Color(0xFFFFC2C2),
           child: Text(
             '?',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
           ),
         );
       default:

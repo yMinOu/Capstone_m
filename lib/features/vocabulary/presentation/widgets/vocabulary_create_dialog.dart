@@ -194,7 +194,7 @@ class _VocabularyCreateDialogState
               child: ElevatedButton(
                 onPressed: isLoading ? null : _handleCreate,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: Color(0xFFFF8989),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   disabledBackgroundColor: Colors.black54,
