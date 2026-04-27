@@ -65,9 +65,9 @@ class _StatsChartWidgetState extends State<StatsChartWidget> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFFFFF),
         border: Border.all(
-          color: const Color(0xFFD9D9D9),
+          color: const Color(0xFFFFCCCC),
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -139,10 +139,10 @@ class _PeriodTabBar extends StatelessWidget {
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F4F4),
+        color: const Color(0xFFFFF8F8),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: const Color(0xFFE5E5E5),
+          color: const Color(0xFFFFCCCC),
         ),
       ),
       child: Row(
@@ -195,8 +195,7 @@ class _PeriodTabButton extends StatelessWidget {
         curve: Curves.easeOutCubic,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          color: isSelected ? const Color(0xFFFF8989) : Colors.transparent,          borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected
               ? [
             const BoxShadow(
@@ -212,8 +211,7 @@ class _PeriodTabButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : const Color(0xFF666666),
-          ),
+            color: isSelected ? Colors.white : const Color(0xFFD37B7B),          ),
         ),
       ),
     );
@@ -398,8 +396,8 @@ class _AnimatedBarItem extends StatelessWidget {
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.black
-                                : const Color(0xFF2D2D2D),
+                                ? const Color(0xFFFF8989)
+                                : const Color(0xFFFFCCCC),
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: isSelected
                                 ? [
@@ -412,8 +410,7 @@ class _AnimatedBarItem extends StatelessWidget {
                                 : null,
                             border: isSelected
                                 ? Border.all(
-                              color: const Color(0xFF444444),
-                              width: 2,
+                              color: const Color(0xFFFF8989),                              width: 2,
                             )
                                 : null,
                           ),
@@ -429,12 +426,11 @@ class _AnimatedBarItem extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black,
+                            color: const Color(0xFFFF8989),
                             borderRadius: BorderRadius.circular(999),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
+                                color: const Color(0xFFFF8989).withOpacity(0.25),                                blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
                             ],

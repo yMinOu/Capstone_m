@@ -19,11 +19,11 @@ class StatsCardWidget extends StatelessWidget {
       height: 118,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFFAFA),
         border: Border.all(
-          color: const Color(0xFFD9D9D9),
+          color: const Color(0xFFFFCCCC),
         ),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +45,7 @@ class StatsCardWidget extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: const Color(0xFFFF8989),
                 ),
               ),
               const SizedBox(width: 4),
