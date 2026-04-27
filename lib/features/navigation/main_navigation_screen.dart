@@ -23,6 +23,7 @@ class MainNavigationScreen extends ConsumerStatefulWidget {
 class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   int _selectedIndex = 0;
   int _statsAnimationSeed = 0;
+  int _learningAnimationSeed = 0;
 
   @override
   void initState() {
@@ -66,7 +67,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
 
   List<Widget> _buildPages() {
     return <Widget>[
-      const LearningScreen(),
+      LearningScreen(animationSeed: _learningAnimationSeed),
       const VocabularyScreen(),
       const CommunityScreen(),
       StatsScreen(
@@ -80,6 +81,10 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+
+      if (index == 0) {
+        _learningAnimationSeed++;
+      }
 
       if (index == 3) {
         _statsAnimationSeed++;
@@ -99,7 +104,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     final pages = _buildPages();
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: _selectedIndex == 0 ? null : AppBar(
         title: Text(_appBarTitles[_selectedIndex]),
         backgroundColor: _selectedIndex == 3
             ? const Color(0xFFFFF3F6)
