@@ -124,12 +124,20 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             ),
           );
         },
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textWhite,
+        backgroundColor: const Color(0xFFFF8989),
+        foregroundColor: Colors.white,
+        elevation: 4,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(
+            color: Color(0xFFFFCCCC),
+            width: 1.5,
+          ),
         ),
-        child: const Icon(Icons.edit),
+        child: const Icon(
+          Icons.edit,
+          color: Colors.white,
+        ),
       )
           : null,
       bottomNavigationBar: Container(

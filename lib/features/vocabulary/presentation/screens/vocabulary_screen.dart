@@ -369,7 +369,7 @@ class _TopTabButton extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isSelected ? const Color(0xFFFFCCCC) : Colors.transparent,              width: 2,
+              color: isSelected ? const Color(0xFFFF8989) : Colors.transparent,              width: 2,
             ),
           ),
         ),
@@ -434,7 +434,7 @@ class _WordFilterHeader extends StatelessWidget {
               foregroundColor: const Color(0xFF222222),
               backgroundColor: Colors.white,
               side: const BorderSide(
-                color: Color(0xFFFFCCCC),
+                color: Color(0xFFFF8989),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
