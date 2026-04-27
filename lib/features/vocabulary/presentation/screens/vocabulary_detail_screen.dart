@@ -167,36 +167,52 @@ class _ActionChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.isSelected = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: isSelected
+          ? const Color(0xFFFFCCCC)
+          : const Color(0xFFFFFFFF),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(999),
-        side: const BorderSide(color: Color(0xFFBEBEBE)),
+        side: BorderSide(
+          color: isSelected
+              ? const Color(0xFFFFB3B3)
+              : const Color(0xFFFFCCCC),
+        ),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: Colors.black87),
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected
+                    ? Colors.white
+                    : const Color(0xFFD37B7B),
+              ),
               const SizedBox(width: 6),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected
+                      ? Colors.white
+                      : const Color(0xFF3A3A3A),
                 ),
               ),
             ],

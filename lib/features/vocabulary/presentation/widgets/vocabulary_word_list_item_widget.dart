@@ -17,6 +17,7 @@ class VocabularyWordListItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasIcon = word.status == 'know' || word.status == 'dontKnow';
     final statusIcon = _buildStatusIcon(word.status);
     final hasSubCategory = word.subCategory.trim().isNotEmpty;
     final meaningText = _meaningText(word);
@@ -36,8 +37,11 @@ class VocabularyWordListItemWidget extends StatelessWidget {
             crossAxisAlignment:
             _isSentence ? CrossAxisAlignment.start : CrossAxisAlignment.center,
             children: [
-              statusIcon,
-              //const SizedBox(width: 8),
+              // ✅ 아이콘 있을 때만 표시
+              if (hasIcon) ...[
+                statusIcon,
+                const SizedBox(width: 12),
+              ],
 
               Expanded(
                 child: _isSentence
@@ -61,8 +65,8 @@ class VocabularyWordListItemWidget extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF4F6B8A),
+                          fontSize: 16,
+                          color: Color(0xFFD37B7B),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -90,8 +94,8 @@ class VocabularyWordListItemWidget extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF4F6B8A),
+                          fontSize: 16,
+                          color: Color(0xFFD37B7B),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -100,31 +104,30 @@ class VocabularyWordListItemWidget extends StatelessWidget {
                 ),
               ),
 
+              // ✅ 서브카테고리
               if (hasSubCategory) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE7F5FF),
+                    color: const Color(0xFFFFFCFC),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: const Color(0xFF8BD0FF),
-                    ),
+                    border: Border.all(color: const Color(0xFFFFB9B9)),
                   ),
                   child: Text(
                     word.subCategory,
                     style: const TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF2D9CDB),
+                      color: Color(0xFF3A3A3A),
                     ),
                   ),
                 ),
               ],
 
               const SizedBox(width: 8),
+
+              // ✅ 삭제 버튼
               InkWell(
                 onTap: onDelete,
                 borderRadius: BorderRadius.circular(20),
@@ -133,7 +136,7 @@ class VocabularyWordListItemWidget extends StatelessWidget {
                   child: Icon(
                     Icons.delete_outline,
                     size: 20,
-                    color: Color(0xFF8A8A8A),
+                    color: Color(0xFFB0B0B0),
                   ),
                 ),
               ),
@@ -145,9 +148,7 @@ class VocabularyWordListItemWidget extends StatelessWidget {
   }
 
   String _meaningText(WordModel word) {
-    if (word.meaning.isEmpty) {
-      return '';
-    }
+    if (word.meaning.isEmpty) return '';
     return word.meaning.first;
   }
 
@@ -156,20 +157,27 @@ class VocabularyWordListItemWidget extends StatelessWidget {
       case 'know':
         return const CircleAvatar(
           radius: 14,
-          backgroundColor: Color(0xFFF3F3F3),
-          child: Icon(Icons.thumb_up_alt_outlined, size: 16),
+          backgroundColor: Color(0xFFB0E0FF),
+          child: Icon(
+            Icons.thumb_up_alt_outlined,
+            size: 16,
+            color: Colors.white,
+          ),
         );
       case 'dontKnow':
         return const CircleAvatar(
           radius: 14,
-          backgroundColor: Color(0xFFFBECEC),
+          backgroundColor: Color(0xFFFFC2C2),
           child: Text(
             '?',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
         );
       default:
-        return const SizedBox(width: 28, height: 28);
+        return const SizedBox(); // ✅ 자리 차지 안함
     }
   }
 }

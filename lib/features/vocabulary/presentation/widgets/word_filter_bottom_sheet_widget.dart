@@ -332,7 +332,7 @@ class _WordFilterBottomSheetWidgetState
                     child: ElevatedButton(
                       onPressed: _apply,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: const Color(0xFFFF8989),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -371,9 +371,9 @@ class _FilterChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = selected ? Colors.black : Colors.white;
+    final backgroundColor = selected ? const Color(0xFFFF9B9B) : Colors.white;
     final foregroundColor = selected ? Colors.white : Colors.black87;
-    final borderColor = selected ? Colors.black : const Color(0xFFBEBEBE);
+    final borderColor = selected ? Colors.white : const Color(0xFFFF9B9B);
 
     return GestureDetector(
       onTap: onTap,
