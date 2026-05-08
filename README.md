@@ -1,6 +1,6 @@
 # 캡스톤 이프로팀
 <div>
-  <img src="https://readme-typing-svg.herokuapp.com?font=Do+Hyeon&size=28&pause=100000&color=FF69B4&repeat=false&width=700&lines=일본어+학습+앱+nihongo"/>
+  <img src="https://readme-typing-svg.herokuapp.com?font=Do+Hyeon&size=28&pause=100&color=FF69B4&width=700&speed=50&deleteSpeed=120&lines=일본어+학습+앱+nihongo"/>
 </div>
 <img width="1856" height="1048" alt="KakaoTalk_20260508_181628313" src="https://github.com/user-attachments/assets/7d9d121b-bb62-4806-b4e7-da46527e9d71" />
 <br>
