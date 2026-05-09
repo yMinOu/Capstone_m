@@ -29,3 +29,23 @@ https://github.com/user-attachments/assets/541f65b2-5d5f-4739-8cb1-417f1be233f0
 
 ## 👩🏻‍💻 팀 소개
 ## ⚒️ 기술 스택
+
+### Front End
+
+| 역할 | 종류 |
+|------|------|
+| Framework | <img src="https://img.shields.io/badge/FLUTTER-02569B?style=for-the-badge&logo=flutter&logoColor=white"/> |
+| State Management | <img src="https://img.shields.io/badge/RIVERPOD-0F172A?style=for-the-badge&logo=flutter&logoColor=white"/> |
+| Database | <img src="https://img.shields.io/badge/FIREBASE-FFCA28?style=for-the-badge&logo=firebase&logoColor=black"/> <img src="https://img.shields.io/badge/FIRESTORE-FFCA28?style=for-the-badge&logo=firebase&logoColor=black"/> |
+| Programming Language | <img src="https://img.shields.io/badge/DART-0175C2?style=for-the-badge&logo=dart&logoColor=white"/> |
+| UI/UX | <img src="https://img.shields.io/badge/FIGMA-F24E1E?style=for-the-badge&logo=figma&logoColor=white"/> |
+| Device | <img src="https://img.shields.io/badge/ANDROID-3DDC84?style=for-the-badge&logo=android&logoColor=white"/> |
+
+### Collaboration & Tools
+
+| 역할 | 종류 |
+|------|------|
+| Version Control | <img src="https://img.shields.io/badge/GIT-F05032?style=for-the-badge&logo=git&logoColor=white"/> <img src="https://img.shields.io/badge/GITHUB-181717?style=for-the-badge&logo=github&logoColor=white"/> |
+| Collaboration | <img src="https://img.shields.io/badge/NOTION-000000?style=for-the-badge&logo=notion&logoColor=white"/> |
+| IDE | <img src="https://img.shields.io/badge/ANDROID_STUDIO-3DDC84?style=for-the-badge&logo=androidstudio&logoColor=white"/> |
+| Environment | <img src="https://img.shields.io/badge/JDK_17-007396?style=for-the-badge&logo=openjdk&logoColor=white"/> <img src="https://img.shields.io/badge/ANDROID_SDK_36-3DDC84?style=for-the-badge&logo=android&logoColor=white"/> |
