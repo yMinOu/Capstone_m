@@ -30,7 +30,7 @@ https://github.com/user-attachments/assets/541f65b2-5d5f-4739-8cb1-417f1be233f0
 ## 👩🏻‍💻 팀 소개
 ## ⚒️ 기술 스택
 
-### Front End
+### App Development
 
 | 역할 | 종류 |
 |------|------|
