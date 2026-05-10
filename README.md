@@ -16,9 +16,53 @@
 ## 📱 프로젝트 기능
 ### 📚 단어장 페이지
 
-| 단어 목록 | 기능 설명 | 필터 기능 | 기능 설명 |
-|------|----------|------|----------|
-| <img src="https://github.com/user-attachments/assets/1f9a5fc5-d8e8-437d-9cce-ea588a34a5aa" width="260"/> | **학습한 단어 목록 확인**<br>- 사용자가 학습한 단어들을 한눈에 확인<br>- JLPT 레벨 및 문자 유형 표시<br>- 좋아요(암기 완료) / 모름 상태 구분 | <img src="https://github.com/user-attachments/assets/2161d400-b521-467f-a849-721ce126be49" width="260"/> | **단어 필터 기능**<br>- JLPT 레벨별 필터 (N1 ~ N5)<br>- 히라가나 / 가타카나 구분<br>- 단어 / 한자 / 예문 유형 선택<br>- 학습 상태(알아요 / 몰라요) 필터<br>- 날짜별 필터 (오늘 / 일주일 / 한달) |
+<table>
+<tr>
+<td width="25%"><img src="https://github.com/user-attachments/assets/bbae80d1-ea76-4791-9b11-89073c05ccfc" width="100%"></td>
+<td width="25%"><b>단어장 목록 화면</b><br>- 생성한 단어장 리스트 확인<br>- 단어장 선택 및 관리 가능</td>
+<td width="25%"><img src="https://github.com/user-attachments/assets/342f1e11-4908-4b18-931e-c6837986d8a4" width="100%"></td>
+<td width="25%"><b>단어 필터 기능</b><br>- JLPT / 문자 유형 필터<br>- 학습 상태 및 날짜별 정렬</td>
+</tr>
+<tr>
+<td><img src="https://github.com/user-attachments/assets/ecfd61d1-2233-4516-ad6a-8c1732e5866a" width="100%"></td>
+<td><b>학습한 단어 목록</b><br>- 학습 완료 단어 확인<br>- 상태 구분</td>
+<td><img src="https://github.com/user-attachments/assets/81462fd1-4f51-4aeb-ac9c-b6944df2b539" width="100%"></td>
+<td><b>퀴즈 기능</b><br>- 단어 기반 문제 제공<br>- 반복 학습 강화</td>
+</tr>
+</table>
+
+---
+
+### 📚 학습 화면
+
+<table>
+<tr>
+<td width="25%"><img src="https://github.com/user-attachments/assets/3502ae74-1565-4ec3-8820-880e66a0f2b9" width="100%"></td>
+<td width="25%"><b>단어 학습 진행 화면</b><br>- 단어 및 뜻 확인<br>- 카드형 UI<br>- 상태 선택 가능</td>
+<td width="25%"><img src="https://github.com/user-attachments/assets/5196ed05-8253-4950-90cb-12e584942de3" width="100%"></td>
+<td width="25%"><b>JLPT 레벨 선택</b><br>- N1 ~ N5 선택<br>- 난이도별 학습</td>
+</tr>
+<tr>
+<td><img src="https://github.com/user-attachments/assets/96b7a5da-c27d-4f04-92ab-dd325670ae2d" width="100%"></td>
+<td><b>학습 결과</b><br>- 결과 확인<br>- 복습 유도</td>
+<td><img src="https://github.com/user-attachments/assets/ef7abe0d-0476-43ee-bc19-269478a2a692" width="100%"></td>
+<td><b>예문 학습</b><br>- 문장 제공<br>- 문맥 이해</td>
+</tr>
+</table>
+
+---
+
+### 📝 게시판 기능
+
+<table>
+<tr>
+<td width="25%"><img src="https://github.com/user-attachments/assets/c920ab59-010f-4442-92eb-7d4d67eae997" width="100%"></td>
+<td width="25%"><b>게시글 목록</b><br>- 전체 글 확인<br>- 탐색 가능</td>
+<td width="25%"><img src="https://github.com/user-attachments/assets/ffd0522a-d7d0-43d7-9df2-bda758be8b28" width="100%"></td>
+<td width="25%"><b>게시글 상세</b><br>- 내용 확인<br>- 소통 기능</td>
+</tr>
+</table>
+
 
 
 <br>
