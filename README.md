@@ -6,6 +6,8 @@
 
 중간 발표 PDF: [캡스톤 중간 발표.pdf](https://github.com/user-attachments/files/28005351/default.pdf)
 
+<br>
+
 ---
 
 ## 1. 프로젝트 소개
@@ -13,6 +15,8 @@
 `nihongo`는 개인별 학습 방식에 맞춰 일본어 암기와 복습을 지원하는 맞춤형 학습 앱입니다.
 
 깜빡이 암기, 카드 학습, 퀴즈 등 여러 학습 방식을 제공하여 사용자가 자신에게 적합한 방식으로 단어를 익힐 수 있도록 돕습니다. 또한 학습 통계를 통해 취약 영역 분석 등을 제공하여 보다 체계적인 일본어 학습을 지원합니다.
+<br>
+<br>
 
 ## 2. 핵심 기능
 
@@ -140,12 +144,14 @@
   </tr>
 </table>
 
-
+<br>
+<br>
 
 ## 3. 시연 영상
 
 https://github.com/user-attachments/assets/a1044807-b21b-493b-9db1-dffb91f81a75
 
+<br>
 
 ## 4. 기술 스택
 
@@ -170,7 +176,8 @@ https://github.com/user-attachments/assets/a1044807-b21b-493b-9db1-dffb91f81a75
 | IDE | <img src="https://img.shields.io/badge/Android_Studio-3DDC84?style=for-the-badge&logo=androidstudio&logoColor=white" /> |
 | Environment | <img src="https://img.shields.io/badge/JDK_17-007396?style=for-the-badge&logo=openjdk&logoColor=white" /> <img src="https://img.shields.io/badge/Android_SDK_36-3DDC84?style=for-the-badge&logo=android&logoColor=white" /> |
 
-
+<br>
+<br>
 
 ## 5. 실행 방법
 
@@ -184,6 +191,7 @@ flutter run --flavor dev --dart-define=ENV=dev
 ```bash
 flutter build appbundle --release --flavor prod --dart-define=ENV=prod
 ```
+<br>
 
 ## 6. 디렉터리 구조
 
@@ -199,6 +207,7 @@ lib/
 │  └─ my_page/    # 마이페이지
 └─ widgets/       # 공통 위젯
 ```
+<br>
 
 ## 7. 팀 소개
 
