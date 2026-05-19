@@ -158,8 +158,7 @@ https://github.com/user-attachments/assets/a1044807-b21b-493b-9db1-dffb91f81a75
 | State Management | <img src="https://img.shields.io/badge/Riverpod-0F172A?style=for-the-badge&logo=flutter&logoColor=white" /> |
 | Authentication | <img src="https://img.shields.io/badge/Firebase_Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" /> <img src="https://img.shields.io/badge/Google_Sign_In-4285F4?style=for-the-badge&logo=google&logoColor=white" /> |
 | Database | <img src="https://img.shields.io/badge/Cloud_Firestore-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" /> |
-| Storage | <img src="https://img.shields.io/badge/Firebase_Storage-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" /> |
-| Local Data | <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" /> |
+| Text To Speech | <img src="https://img.shields.io/badge/Flutter_TTS-02569B?style=for-the-badge&logo=flutter&logoColor=white" /> |
 | Device | <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" /> |
 
 ### Collaboration & Tools
@@ -170,6 +169,8 @@ https://github.com/user-attachments/assets/a1044807-b21b-493b-9db1-dffb91f81a75
 | Design | <img src="https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white" /> |
 | IDE | <img src="https://img.shields.io/badge/Android_Studio-3DDC84?style=for-the-badge&logo=androidstudio&logoColor=white" /> |
 | Environment | <img src="https://img.shields.io/badge/JDK_17-007396?style=for-the-badge&logo=openjdk&logoColor=white" /> <img src="https://img.shields.io/badge/Android_SDK_36-3DDC84?style=for-the-badge&logo=android&logoColor=white" /> |
+
+
 
 ## 5. 실행 방법
 
@@ -201,10 +202,31 @@ lib/
 
 ## 7. 팀 소개
 
-| 이름 | 담당 |
-| --- | --- |
-| 이준서 | 커뮤니티 |
-| 김덕우 | 학습 |
-| 김은호 | 마이페이지 |
-| 김유진 | 단어장, 통계 |
-
+<table>
+  <tr>
+    <th align="center">👑이준서</th>
+    <th align="center">김덕우</th>
+    <th align="center">김은호</th>
+    <th align="center">김유진</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <img width="130" alt="이준서" src="https://github.com/user-attachments/assets/2a531945-3cf0-4cf5-be7b-a7784584d629" />
+    </td>
+    <td align="center">
+      <img width="130" alt="김덕우" src="https://github.com/user-attachments/assets/15abc0b1-ee8b-4d4f-89c4-a96c73800ca5" />
+    </td>
+    <td align="center">
+      <img width="130" alt="김은호" src="https://github.com/user-attachments/assets/05ff2835-7d5c-4d3a-b61a-0d5725991903" />
+    </td>
+    <td align="center">
+      <img width="130" alt="김유진" src="https://github.com/user-attachments/assets/aba665e3-6dfc-4b64-bb5e-959a05abd102" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">커뮤니티</td>
+    <td align="center">학습</td>
+    <td align="center">마이페이지</td>
+    <td align="center">단어장, 통계</td>
+  </tr>
+</table>
